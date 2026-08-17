@@ -53,17 +53,18 @@ class CatalogEntryRecord(Base):
 class PromotionDecisionRecord(Base):
     __tablename__ = "promotion_decisions"
     __table_args__ = (
+        UniqueConstraint("idempotency_key", name="uq_promotion_decisions_idempotency_key"),
         Index("ix_promotion_decisions_catalog_id", "catalog_entry_id"),
         Index("ix_promotion_decisions_created_at", "created_at"),
     )
 
-    id: Mapped[str] = mapped_column(String(256), primary_key=True)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
     catalog_entry_id: Mapped[str] = mapped_column(ForeignKey("catalog_entries.id", ondelete="RESTRICT"), nullable=False)
     evaluation_run_id: Mapped[str] = mapped_column(ForeignKey("evaluation_runs.id", ondelete="RESTRICT"), nullable=False)
-    allowed: Mapped[bool] = mapped_column(Boolean, nullable=False)
-    target_lifecycle: Mapped[str] = mapped_column(String(32), nullable=False)
+    state: Mapped[str] = mapped_column(String(32), nullable=False)
     policy_version: Mapped[str] = mapped_column(String(32), nullable=False)
     policy_snapshot_hash: Mapped[str | None] = mapped_column(String(71))
+    idempotency_key: Mapped[str] = mapped_column(String(256), nullable=False)
     reasons: Mapped[list[str]] = mapped_column(JSONB, nullable=False)
     actor: Mapped[str | None] = mapped_column(String(256))
     artifact_digest: Mapped[str | None] = mapped_column(String(71))

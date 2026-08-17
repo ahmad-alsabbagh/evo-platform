@@ -1,9 +1,21 @@
+from enum import StrEnum
 from typing import Literal
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
 RiskLevel = Literal["low", "medium", "high", "critical"]
+
+
+class PromotionState(StrEnum):
+    blocked = "blocked"
+    candidate = "candidate"
+    canary = "canary"
+    promoted = "promoted"
+    rejected = "rejected"
+    revoked = "revoked"
+    rolled_back = "rolled_back"
 
 
 class CatalogQuality(BaseModel):
@@ -33,10 +45,12 @@ class CatalogEntry(BaseModel):
 class PromotionDecision(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    allowed: bool
-    target_lifecycle: Literal["candidate", "canary", "promoted", "rejected"]
+    decision_id: UUID
+    idempotency_key: str = Field(min_length=1, max_length=256)
+    state: PromotionState
     reasons: list[str]
     policy_version: str
     policy_snapshot_hash: str | None = None
     evaluation_run_id: str | None = None
     actor: str | None = None
+    artifact_digest: str | None = None

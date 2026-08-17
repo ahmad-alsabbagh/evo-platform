@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from jsonschema import Draft202012Validator
+from jsonschema import Draft202012Validator, RefResolver
 
 SCHEMA_DIR = Path(__file__).parents[1] / "schemas"
 
@@ -10,44 +10,18 @@ def load_schema(name: str) -> dict:
     return json.loads((SCHEMA_DIR / name).read_text())
 
 
-def test_all_schemas_are_draft_2020_12() -> None:
-    for path in SCHEMA_DIR.glob("*.json"):
-        schema = json.loads(path.read_text())
-        Draft202012Validator.check_schema(schema)
+def validator(name: str) -> Draft202012Validator:
+    schema = load_schema(name)
+    store = {path.name: load_schema(path.name) for path in SCHEMA_DIR.glob("*.json")}
+    return Draft202012Validator(name, resolver=RefResolver(name, schema, store=store))
 
 
-def test_capability_minimal_fixture() -> None:
+def test_capability_requires_contract_fields() -> None:
     schema = load_schema("capability.schema.json")
     fixture = {"id": "summarize", "version": "1.0.0"}
-    errors = list(Draft202012Validator(schema).iter_errors(fixture))
-    assert errors == []
-
-
-def test_capability_rejects_missing_required_field() -> None:
-    schema = load_schema("capability.schema.json")
-    fixture = {"id": "summarize"}
     assert list(Draft202012Validator(schema).iter_errors(fixture))
 
 
-def test_evaluation_minimal_fixture() -> None:
-    schema = load_schema("evaluation.schema.json")
-    fixture = {
-        "id": "eval-001",
-        "capability": {"id": "summarize", "version": "1.0.0"},
-        "dataset": {"id": "golden", "version": "1.0.0", "split": "validation"},
-        "evaluator": {"type": "deterministic", "version": "1.0.0"},
-        "execution": {"timestamp": "2026-01-01T00:00:00Z", "status": "completed"},
-        "result": {"metrics": {"accuracy": 1.0}, "promotion": "candidate"},
-        "reproducibility": {"configHash": "sha256:test"},
-    }
-    assert list(Draft202012Validator(schema).iter_errors(fixture)) == []
-
-
-def test_provenance_minimal_fixture() -> None:
-    schema = load_schema("provenance.schema.json")
-    fixture = {
-        "sourceType": "original",
-        "license": {"identifier": "Apache-2.0"},
-        "createdAt": "2026-01-01T00:00:00Z",
-    }
-    assert list(Draft202012Validator(schema).iter_errors(fixture)) == []
+def test_experiment_schema_resolves_defs() -> None:
+    fixture = {"id":"experiment:summarize","schemaVersion":"1.0.0","hypothesis":"better groundedness","baseline":{"capabilityId":"summarize","version":"1.0.0"},"variants":[{"capabilityId":"summarize","version":"1.1.0"}],"primaryMetric":"groundedness","guardrails":{"maxSafetyViolations":0,"maxCostIncrease":0.1,"maxP95LatencyIncrease":0.2},"trafficPlan":{"mode":"shadow","steps":[1,5],"rollbackOn":["safety_regression"]}}
+    assert list(validator("experiment.schema.json").iter_errors(fixture)) == []

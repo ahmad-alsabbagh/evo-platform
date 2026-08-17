@@ -1,18 +1,27 @@
 import logging
 import sys
+from collections.abc import Mapping
 from typing import Any
 
 import structlog
 from opentelemetry import trace
 
-SENSITIVE_KEYS = frozenset({"password", "token", "secret", "authorization", "api_key", "prompt", "output"})
+SENSITIVE_KEYS = frozenset({"password", "token", "secret", "authorization", "api_key", "apikey", "prompt", "output", "content"})
 
 
 def redact_sensitive(_: Any, __: str, event_dict: dict[str, Any]) -> dict[str, Any]:
-    for key in list(event_dict):
-        if key.lower() in SENSITIVE_KEYS:
-            event_dict[key] = "[REDACTED]"
-    return event_dict
+    def scrub(value: Any, key: str | None = None) -> Any:
+        if key and key.lower() in SENSITIVE_KEYS:
+            return "[REDACTED]"
+        if isinstance(value, Mapping):
+            return {str(k): scrub(v, str(k)) for k, v in value.items()}
+        if isinstance(value, list):
+            return [scrub(item) for item in value]
+        if isinstance(value, tuple):
+            return tuple(scrub(item) for item in value)
+        return value
+
+    return scrub(event_dict)
 
 
 def add_trace_context(_: Any, __: str, event_dict: dict[str, Any]) -> dict[str, Any]:
