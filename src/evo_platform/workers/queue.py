@@ -10,6 +10,7 @@ class JobQueue(Protocol):
     async def read(self, consumer: str, count: int = 10) -> list[tuple[str, EvaluationJob]]: ...
     async def acknowledge(self, message_id: str) -> None: ...
     async def claim_stale(self, consumer: str, min_idle_ms: int, count: int = 10) -> list[tuple[str, EvaluationJob]]: ...
+    async def move_to_dead_letter(self, message_id: str, job: EvaluationJob, reason: str) -> None: ...
 
 
 class RedisStreamQueue:
@@ -18,10 +19,12 @@ class RedisStreamQueue:
         client: Redis,
         stream: str = "evo:evaluation",
         group: str = "evo-workers",
+        dead_letter_stream: str = "evo:evaluation:dlq",
     ) -> None:
         self.client = client
         self.stream = stream
         self.group = group
+        self.dead_letter_stream = dead_letter_stream
 
     async def ensure_group(self) -> None:
         try:
@@ -60,6 +63,17 @@ class RedisStreamQueue:
         )
         messages = claimed[1] if len(claimed) > 1 else []
         return self._decode([(self.stream, messages)])
+
+    async def move_to_dead_letter(self, message_id: str, job: EvaluationJob, reason: str) -> None:
+        await self.client.xadd(
+            self.dead_letter_stream,
+            {
+                "payload": job.model_dump_json(),
+                "reason": reason,
+                "original_message_id": message_id,
+            },
+        )
+        await self.acknowledge(message_id)
 
     @staticmethod
     def _decode(result: list) -> list[tuple[str, EvaluationJob]]:

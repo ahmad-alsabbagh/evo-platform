@@ -19,7 +19,7 @@ PostgreSQL stores indexed evaluation metadata and the canonical JSON payload. La
 
 ## Worker boundary
 
-HTTP handlers enqueue evaluation jobs and return a run identifier. Workers consume jobs with at-least-once delivery semantics. Idempotency keys prevent successful runs from being executed twice; bounded retries lead to a dead-letter state.
+HTTP handlers enqueue evaluation jobs and return a run identifier. Workers consume jobs through a Redis Streams consumer group with at-least-once delivery. Unacknowledged messages are recovered through `XAUTOCLAIM` after a visibility timeout. Idempotency uses an atomic claim (`SETNX` with TTL) before executing a handler, and the claim is marked complete only after success. Jobs that exhaust retries are moved to a dedicated dead-letter stream with the failure reason and original message id.
 
 ## Observability
 
