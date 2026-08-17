@@ -1,0 +1,8 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allow documented non-secret test hashes"
+regexes = [
+  '''sha256:[a-f]{64}''',
+]

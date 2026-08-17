@@ -12,9 +12,15 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-if database_url := os.getenv("EVO_DATABASE_URL"):
-    config.set_main_option("sqlalchemy.url", database_url)
 
+def configured_database_url() -> str:
+    database_url = os.getenv("EVO_DATABASE_URL") or config.get_main_option("sqlalchemy.url")
+    if not database_url or database_url.startswith("driver://"):
+        raise RuntimeError("EVO_DATABASE_URL must be configured for migrations")
+    return database_url
+
+
+config.set_main_option("sqlalchemy.url", configured_database_url())
 target_metadata = Base.metadata
 
 
