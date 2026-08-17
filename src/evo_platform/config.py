@@ -10,8 +10,10 @@ class Settings(BaseSettings):
     environment: str = "development"
     service_name: str = "evo-platform"
     database_url: str = Field(default="postgresql+asyncpg://evo:evo@localhost:5432/evo")
-    otel_exporter_otlp_endpoint: str | None = None
-    otel_sample_ratio: float = Field(default=1.0, ge=0.0, le=1.0)
+    redis_url: str = "redis://localhost:6379/0"
+    redis_stream: str = "evo:evaluation"
+    redis_group: str = "evo-workers"
+    redis_visibility_timeout_ms: int = Field(default=60_000, ge=1_000)
 
 
 @lru_cache

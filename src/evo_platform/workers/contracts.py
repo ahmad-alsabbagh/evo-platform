@@ -21,13 +21,3 @@ class EvaluationJob(BaseModel):
     attempt: int = Field(default=0, ge=0, le=10)
     max_attempts: int = Field(default=3, ge=1, le=10)
     payload: dict[str, Any]
-
-
-class JobResult(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    job_id: str
-    run_id: str
-    status: JobStatus
-    attempt: int
-    error_code: str | None = None
