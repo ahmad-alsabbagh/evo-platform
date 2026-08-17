@@ -41,8 +41,10 @@ jobs:
         run: ruff check .
       - name: Mypy
         run: mypy src
-      - name: Tests
-        run: pytest
+      - name: Unit and contract tests
+        run: pytest -m "not integration"
+      - name: PostgreSQL integration tests
+        run: pytest -m integration
       - name: Validate JSON schemas
         run: python - <<'PY'
 import json

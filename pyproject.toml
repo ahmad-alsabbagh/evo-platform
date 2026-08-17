@@ -48,3 +48,4 @@ warn_unreachable = true
 addopts = "--strict-config --strict-markers --cov=evo_platform --cov-report=term-missing"
 pythonpath = ["src"]
 asyncio_mode = "auto"
+markers = ["integration: requires a PostgreSQL service"]
