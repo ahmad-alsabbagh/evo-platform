@@ -27,6 +27,7 @@ class CatalogEntry(BaseModel):
     license_identifier: str | None = None
     provenance_source_type: str | None = None
     human_reviewed: bool = False
+    artifact_digest: str | None = None
 
 
 class PromotionDecision(BaseModel):
@@ -36,3 +37,6 @@ class PromotionDecision(BaseModel):
     target_lifecycle: Literal["candidate", "canary", "promoted", "rejected"]
     reasons: list[str]
     policy_version: str
+    policy_snapshot_hash: str | None = None
+    evaluation_run_id: str | None = None
+    actor: str | None = None

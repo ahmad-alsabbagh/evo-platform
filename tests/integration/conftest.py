@@ -14,6 +14,10 @@ async def session() -> AsyncSession:
     async with factory() as db_session:
         yield db_session
     async with engine.begin() as connection:
-        await connection.run_sync(lambda sync_connection: sync_connection.exec_driver_sql("TRUNCATE evaluation_runs"))
+        await connection.run_sync(
+            lambda sync_connection: sync_connection.exec_driver_sql(
+                "TRUNCATE promotion_decisions, catalog_entries, evaluation_runs CASCADE"
+            )
+        )
     subprocess.run(["alembic", "downgrade", "base"], check=True, env=os.environ.copy())
     await engine.dispose()

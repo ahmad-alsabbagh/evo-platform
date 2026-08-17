@@ -44,4 +44,4 @@ async def test_transaction_rollback(session) -> None:
 @pytest.mark.integration
 async def test_migration_table(session) -> None:
     result = await session.execute(text("SELECT version_num FROM alembic_version"))
-    assert result.scalar_one() == "0001_create_evaluation_runs"
+    assert result.scalar_one() == "0002_create_catalog_entries"

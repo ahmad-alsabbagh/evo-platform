@@ -4,22 +4,30 @@ from typing import Protocol
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from evo_platform.catalog.models import CatalogEntry
+from evo_platform.catalog.models import CatalogEntry, PromotionDecision
 from evo_platform.storage.models import CatalogEntryRecord, PromotionDecisionRecord
 
 
 class CatalogRepository(Protocol):
-    async def publish(self, entry: CatalogEntry) -> CatalogEntry: ...
+    async def publish_if_promoted(
+        self,
+        entry: CatalogEntry,
+        decision: PromotionDecision,
+    ) -> CatalogEntry: ...
+
     async def get(self, entry_id: str) -> CatalogEntry | None: ...
     async def list_published(self, limit: int = 100) -> Sequence[CatalogEntryRecord]: ...
-    async def record_decision(self, entry_id: str, decision_id: str, allowed: bool, target_lifecycle: str, policy_version: str, reasons: list[str]) -> None: ...
 
 
 class SqlAlchemyCatalogRepository:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
-    async def publish(self, entry: CatalogEntry) -> CatalogEntry:
+    async def publish_if_promoted(self, entry: CatalogEntry, decision: PromotionDecision) -> CatalogEntry:
+        if not decision.allowed or decision.target_lifecycle != "promoted":
+            raise ValueError("catalog publication requires an allowed promoted decision")
+        if decision.evaluation_run_id is None:
+            raise ValueError("catalog publication requires evaluation_run_id")
         record = CatalogEntryRecord(
             id=entry.id,
             capability_id=entry.capability_id,
@@ -28,7 +36,20 @@ class SqlAlchemyCatalogRepository:
             risk_level=entry.risk_level,
             payload=entry.model_dump(mode="json"),
         )
+        audit = PromotionDecisionRecord(
+            id=f"decision:{entry.id}:{decision.policy_version}",
+            catalog_entry_id=entry.id,
+            evaluation_run_id=decision.evaluation_run_id,
+            allowed=decision.allowed,
+            target_lifecycle=decision.target_lifecycle,
+            policy_version=decision.policy_version,
+            policy_snapshot_hash=decision.policy_snapshot_hash,
+            reasons=decision.reasons,
+            actor=decision.actor,
+            artifact_digest=entry.artifact_digest,
+        )
         self.session.add(record)
+        self.session.add(audit)
         await self.session.flush()
         return entry
 
@@ -46,24 +67,3 @@ class SqlAlchemyCatalogRepository:
             .limit(max(1, min(limit, 1000)))
         )
         return result.scalars().all()
-
-    async def record_decision(
-        self,
-        entry_id: str,
-        decision_id: str,
-        allowed: bool,
-        target_lifecycle: str,
-        policy_version: str,
-        reasons: list[str],
-    ) -> None:
-        self.session.add(
-            PromotionDecisionRecord(
-                id=decision_id,
-                catalog_entry_id=entry_id,
-                allowed=allowed,
-                target_lifecycle=target_lifecycle,
-                policy_version=policy_version,
-                reasons=reasons,
-            )
-        )
-        await self.session.flush()

@@ -27,11 +27,17 @@ def upgrade() -> None:
         "promotion_decisions",
         sa.Column("id", sa.String(length=256), primary_key=True),
         sa.Column("catalog_entry_id", sa.String(length=256), nullable=False),
+        sa.Column("evaluation_run_id", sa.String(length=256), nullable=False),
         sa.Column("allowed", sa.Boolean(), nullable=False),
         sa.Column("target_lifecycle", sa.String(length=32), nullable=False),
         sa.Column("policy_version", sa.String(length=32), nullable=False),
+        sa.Column("policy_snapshot_hash", sa.String(length=71)),
         sa.Column("reasons", postgresql.JSONB(), nullable=False),
+        sa.Column("actor", sa.String(length=256)),
+        sa.Column("artifact_digest", sa.String(length=71)),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.ForeignKeyConstraint(["catalog_entry_id"], ["catalog_entries.id"], ondelete="RESTRICT"),
+        sa.ForeignKeyConstraint(["evaluation_run_id"], ["evaluation_runs.id"], ondelete="RESTRICT"),
     )
     op.create_index("ix_promotion_decisions_catalog_id", "promotion_decisions", ["catalog_entry_id"])
     op.create_index("ix_promotion_decisions_created_at", "promotion_decisions", ["created_at"])

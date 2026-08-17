@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     redis_stream: str = "evo:evaluation"
     redis_group: str = "evo-workers"
     redis_visibility_timeout_ms: int = Field(default=60_000, ge=1_000)
+    otel_exporter_otlp_endpoint: str | None = None
+    otel_sample_ratio: float = Field(default=1.0, ge=0.0, le=1.0)
 
 
 @lru_cache
