@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     environment: str = "development"
     service_name: str = "evo-platform"
     database_url: str = Field(default="postgresql+asyncpg://evo:evo@localhost:5432/evo")
+    otel_exporter_otlp_endpoint: str | None = None
+    otel_sample_ratio: float = Field(default=1.0, ge=0.0, le=1.0)
 
 
 @lru_cache

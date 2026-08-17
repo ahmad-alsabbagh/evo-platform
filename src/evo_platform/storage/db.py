@@ -5,6 +5,7 @@ from typing import Final
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from evo_platform.config import get_settings
+from evo_platform.observability.tracing import configure_tracing
 
 
 DEFAULT_POOL_SIZE: Final = 5
@@ -16,13 +17,21 @@ def database_url() -> str:
 
 
 def create_engine(url: str | None = None) -> AsyncEngine:
-    return create_async_engine(
+    engine = create_async_engine(
         url or database_url(),
         pool_pre_ping=True,
         pool_recycle=1800,
         pool_size=DEFAULT_POOL_SIZE,
         max_overflow=DEFAULT_MAX_OVERFLOW,
     )
+    settings = get_settings()
+    configure_tracing(
+        settings.service_name,
+        endpoint=settings.otel_exporter_otlp_endpoint,
+        sample_ratio=settings.otel_sample_ratio,
+        engine=engine.sync_engine,
+    )
+    return engine
 
 
 engine = create_engine()

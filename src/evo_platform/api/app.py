@@ -13,10 +13,12 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         request_id = request.headers.get("X-Request-ID", str(uuid4()))
         structlog.contextvars.bind_contextvars(request_id=request_id)
-        response = await call_next(request)
-        response.headers["X-Request-ID"] = request_id
-        structlog.contextvars.clear_contextvars()
-        return response
+        try:
+            response = await call_next(request)
+            response.headers["X-Request-ID"] = request_id
+            return response
+        finally:
+            structlog.contextvars.clear_contextvars()
 
 
 def create_app() -> FastAPI:
@@ -24,7 +26,11 @@ def create_app() -> FastAPI:
     configure_logging()
     app = FastAPI(title=settings.service_name, version=__version__)
     app.add_middleware(RequestIdMiddleware)
-    configure_tracing(settings.service_name)
+    configure_tracing(
+        settings.service_name,
+        endpoint=settings.otel_exporter_otlp_endpoint,
+        sample_ratio=settings.otel_sample_ratio,
+    )
 
     @app.get("/healthz", tags=["health"])
     async def healthz() -> dict[str, str]:
