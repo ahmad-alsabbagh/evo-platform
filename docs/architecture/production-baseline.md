@@ -17,6 +17,10 @@ EvoPlatform starts as a modular monolith with a strict boundary between API requ
 
 PostgreSQL stores indexed evaluation metadata and the canonical JSON payload. Large artifacts, traces, and reports belong in object storage and are referenced by immutable digest.
 
+## Catalog boundary
+
+Catalog entries are discovery metadata, not proof of quality. Promotion requires a linked evaluation run, provenance, license metadata, and policy checks. Collections are versioned and owned; their items reference stable capability IDs and versions.
+
 ## Worker boundary
 
 HTTP handlers enqueue evaluation jobs and return a run identifier. Workers consume jobs through a Redis Streams consumer group with at-least-once delivery. Unacknowledged messages are recovered through `XAUTOCLAIM` after a visibility timeout. Idempotency uses an atomic claim (`SETNX` with TTL) before executing a handler, and the claim is marked complete only after success. Jobs that exhaust retries are moved to a dedicated dead-letter stream with the failure reason and original message id.
