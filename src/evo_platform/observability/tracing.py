@@ -10,7 +10,6 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter, SpanExportResult
 from opentelemetry.sdk.trace.sampling import ParentBased, TraceIdRatioBased
 
-
 _instrumented_fastapi = False
 _instrumented_engines: set[int] = set()
 _configured = False
@@ -38,9 +37,7 @@ def configure_tracing(
             sampler=ParentBased(TraceIdRatioBased(sample_ratio)),
         )
         exporter: SpanExporter = (
-            OTLPSpanExporter(endpoint=endpoint, insecure=True)
-            if endpoint
-            else _NoopExporter()
+            OTLPSpanExporter(endpoint=endpoint, insecure=True) if endpoint else _NoopExporter()
         )
         provider.add_span_processor(BatchSpanProcessor(exporter))
         trace.set_tracer_provider(provider)

@@ -4,25 +4,55 @@
   "title": "EvoPlatform Evaluation Record",
   "type": "object",
   "additionalProperties": false,
-  "required": ["id", "capability", "dataset", "evaluator", "execution", "result", "reproducibility"],
+  "required": [
+    "id",
+    "capability",
+    "dataset",
+    "evaluator",
+    "execution",
+    "result",
+    "reproducibility"
+  ],
   "properties": {
-    "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._/-]*$"},
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._/-]*$"
+    },
     "capability": {
       "type": "object",
       "additionalProperties": false,
       "required": ["id", "version"],
-      "properties": {"id": {"type": "string"}, "version": {"type": "string"}}
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      }
     },
     "dataset": {
       "type": "object",
       "additionalProperties": false,
       "required": ["id", "version", "split"],
       "properties": {
-        "id": {"type": "string"},
-        "version": {"type": "string"},
-        "split": {"type": "string", "enum": ["development", "validation", "regression", "adversarial", "production-derived"]},
-        "caseCount": {"type": "integer", "minimum": 0},
-        "hash": {"type": "string"}
+        "id": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "split": {
+          "type": "string",
+          "enum": ["development", "validation", "regression", "adversarial", "production-derived"]
+        },
+        "caseCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "hash": {
+          "type": "string"
+        }
       }
     },
     "model": {
@@ -30,10 +60,18 @@
       "additionalProperties": false,
       "required": ["provider", "name"],
       "properties": {
-        "provider": {"type": "string"},
-        "name": {"type": "string"},
-        "version": {"type": "string"},
-        "configuration": {"type": "object"}
+        "provider": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "configuration": {
+          "type": "object"
+        }
       }
     },
     "evaluator": {
@@ -41,9 +79,16 @@
       "additionalProperties": false,
       "required": ["type", "version"],
       "properties": {
-        "type": {"type": "string", "enum": ["deterministic", "reference", "model-judge", "human", "hybrid"]},
-        "version": {"type": "string"},
-        "rubric": {"type": "string"}
+        "type": {
+          "type": "string",
+          "enum": ["deterministic", "reference", "model-judge", "human", "hybrid"]
+        },
+        "version": {
+          "type": "string"
+        },
+        "rubric": {
+          "type": "string"
+        }
       }
     },
     "execution": {
@@ -51,11 +96,23 @@
       "additionalProperties": false,
       "required": ["timestamp", "status"],
       "properties": {
-        "timestamp": {"type": "string", "format": "date-time"},
-        "status": {"type": "string", "enum": ["completed", "partial", "failed"]},
-        "seed": {"type": "integer"},
-        "runtime": {"type": "string"},
-        "toolVersions": {"type": "object"}
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["completed", "partial", "failed"]
+        },
+        "seed": {
+          "type": "integer"
+        },
+        "runtime": {
+          "type": "string"
+        },
+        "toolVersions": {
+          "type": "object"
+        }
       }
     },
     "result": {
@@ -63,23 +120,58 @@
       "additionalProperties": false,
       "required": ["metrics", "promotion"],
       "properties": {
-        "metrics": {"type": "object", "additionalProperties": {"type": "number"}},
-        "sampleSize": {"type": "integer", "minimum": 0},
-        "promotion": {"type": "string", "enum": ["blocked", "candidate", "canary", "promoted", "rejected"]},
-        "regression": {"type": "string", "enum": ["not-run", "passed", "failed"]},
-        "notes": {"type": "string"}
+        "metrics": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "sampleSize": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "promotion": {
+          "type": "string",
+          "enum": ["blocked", "candidate", "canary", "promoted", "rejected"]
+        },
+        "regression": {
+          "type": "string",
+          "enum": ["not-run", "passed", "failed"]
+        },
+        "notes": {
+          "type": "string"
+        }
       }
     },
     "operations": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "latencyMs": {"type": "number", "minimum": 0},
-        "inputTokens": {"type": "integer", "minimum": 0},
-        "outputTokens": {"type": "integer", "minimum": 0},
-        "toolCalls": {"type": "integer", "minimum": 0},
-        "estimatedCost": {"type": "number", "minimum": 0},
-        "currency": {"type": "string", "minLength": 3, "maxLength": 3}
+        "latencyMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "inputTokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "outputTokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "toolCalls": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "estimatedCost": {
+          "type": "number",
+          "minimum": 0
+        },
+        "currency": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 3
+        }
       }
     },
     "reproducibility": {
@@ -87,11 +179,22 @@
       "additionalProperties": false,
       "required": ["configHash"],
       "properties": {
-        "configHash": {"type": "string"},
-        "environment": {"type": "string"},
-        "sourceCommit": {"type": "string"},
-        "traceReference": {"type": "string"},
-        "recordedAt": {"type": "string", "format": "date-time"}
+        "configHash": {
+          "type": "string"
+        },
+        "environment": {
+          "type": "string"
+        },
+        "sourceCommit": {
+          "type": "string"
+        },
+        "traceReference": {
+          "type": "string"
+        },
+        "recordedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
       }
     }
   }

@@ -6,7 +6,6 @@ from typing import Any
 import structlog
 from opentelemetry import trace
 
-
 SENSITIVE_KEYS = frozenset(
     {
         "password",

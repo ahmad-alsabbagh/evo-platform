@@ -69,6 +69,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Unit and contract tests
         run: uv run pytest -m "not integration"
+      - name: Apply database migrations
+        run: uv run alembic upgrade head
+
       - name: PostgreSQL and Redis integration tests
         run: uv run pytest -m integration
       - name: Validate JSON schemas

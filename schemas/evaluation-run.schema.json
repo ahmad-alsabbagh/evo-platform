@@ -4,18 +4,37 @@
   "title": "EvoPlatform Evaluation Run",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "id", "capability", "dataset", "evaluator", "execution", "outcome", "reproducibility"],
+  "required": [
+    "schemaVersion",
+    "id",
+    "capability",
+    "dataset",
+    "evaluator",
+    "execution",
+    "outcome",
+    "reproducibility"
+  ],
   "properties": {
-    "schemaVersion": {"$ref": "common.schema.json#/$defs/semver"},
-    "id": {"$ref": "common.schema.json#/$defs/id"},
+    "schemaVersion": {
+      "$ref": "common.schema.json#/$defs/semver"
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
     "capability": {
       "type": "object",
       "additionalProperties": false,
       "required": ["id", "version"],
       "properties": {
-        "id": {"$ref": "common.schema.json#/$defs/id"},
-        "version": {"$ref": "common.schema.json#/$defs/semver"},
-        "revision": {"type": "string"}
+        "id": {
+          "$ref": "common.schema.json#/$defs/id"
+        },
+        "version": {
+          "$ref": "common.schema.json#/$defs/semver"
+        },
+        "revision": {
+          "type": "string"
+        }
       }
     },
     "dataset": {
@@ -23,11 +42,22 @@
       "additionalProperties": false,
       "required": ["id", "version", "split", "hash"],
       "properties": {
-        "id": {"$ref": "common.schema.json#/$defs/id"},
-        "version": {"$ref": "common.schema.json#/$defs/semver"},
-        "split": {"type": "string", "enum": ["development", "validation", "regression", "adversarial", "production-derived"]},
-        "caseCount": {"$ref": "common.schema.json#/$defs/nonNegativeInteger"},
-        "hash": {"$ref": "common.schema.json#/$defs/sha256"}
+        "id": {
+          "$ref": "common.schema.json#/$defs/id"
+        },
+        "version": {
+          "$ref": "common.schema.json#/$defs/semver"
+        },
+        "split": {
+          "type": "string",
+          "enum": ["development", "validation", "regression", "adversarial", "production-derived"]
+        },
+        "caseCount": {
+          "$ref": "common.schema.json#/$defs/nonNegativeInteger"
+        },
+        "hash": {
+          "$ref": "common.schema.json#/$defs/sha256"
+        }
       }
     },
     "model": {
@@ -35,10 +65,20 @@
       "additionalProperties": false,
       "required": ["provider", "name"],
       "properties": {
-        "provider": {"type": "string", "minLength": 1},
-        "name": {"type": "string", "minLength": 1},
-        "version": {"type": "string"},
-        "configurationHash": {"$ref": "common.schema.json#/$defs/sha256"}
+        "provider": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string"
+        },
+        "configurationHash": {
+          "$ref": "common.schema.json#/$defs/sha256"
+        }
       }
     },
     "evaluator": {
@@ -46,9 +86,16 @@
       "additionalProperties": false,
       "required": ["type", "version"],
       "properties": {
-        "type": {"type": "string", "enum": ["deterministic", "reference", "model-judge", "human", "hybrid"]},
-        "version": {"$ref": "common.schema.json#/$defs/semver"},
-        "rubric": {"type": "string"}
+        "type": {
+          "type": "string",
+          "enum": ["deterministic", "reference", "model-judge", "human", "hybrid"]
+        },
+        "version": {
+          "$ref": "common.schema.json#/$defs/semver"
+        },
+        "rubric": {
+          "type": "string"
+        }
       }
     },
     "execution": {
@@ -56,12 +103,25 @@
       "additionalProperties": false,
       "required": ["startedAt", "finishedAt", "status"],
       "properties": {
-        "startedAt": {"$ref": "common.schema.json#/$defs/timestamp"},
-        "finishedAt": {"$ref": "common.schema.json#/$defs/timestamp"},
-        "status": {"type": "string", "enum": ["completed", "partial", "failed", "cancelled"]},
-        "runIdempotencyKey": {"$ref": "common.schema.json#/$defs/id"},
-        "sourceCommit": {"type": "string"},
-        "environment": {"type": "string"}
+        "startedAt": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        "finishedAt": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["completed", "partial", "failed", "cancelled"]
+        },
+        "runIdempotencyKey": {
+          "$ref": "common.schema.json#/$defs/id"
+        },
+        "sourceCommit": {
+          "type": "string"
+        },
+        "environment": {
+          "type": "string"
+        }
       }
     },
     "outcome": {
@@ -69,30 +129,68 @@
       "additionalProperties": false,
       "required": ["metrics", "promotion"],
       "properties": {
-        "metrics": {"type": "object", "minProperties": 1, "additionalProperties": {"type": "number"}},
-        "sampleSize": {"$ref": "common.schema.json#/$defs/nonNegativeInteger"},
+        "metrics": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "sampleSize": {
+          "$ref": "common.schema.json#/$defs/nonNegativeInteger"
+        },
         "confidence": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "level": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
-            "interval": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2}
+            "level": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 1
+            },
+            "interval": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            }
           }
         },
-        "promotion": {"type": "string", "enum": ["blocked", "candidate", "canary", "promoted", "rejected"]},
-        "regression": {"type": "string", "enum": ["not-run", "passed", "failed"]}
+        "promotion": {
+          "type": "string",
+          "enum": ["blocked", "candidate", "canary", "promoted", "rejected"]
+        },
+        "regression": {
+          "type": "string",
+          "enum": ["not-run", "passed", "failed"]
+        }
       }
     },
     "budgets": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "latencyMs": {"$ref": "common.schema.json#/$defs/nonNegativeNumber"},
-        "estimatedCost": {"$ref": "common.schema.json#/$defs/nonNegativeNumber"},
-        "currency": {"type": "string", "pattern": "^[A-Z]{3}$"},
-        "inputTokens": {"$ref": "common.schema.json#/$defs/nonNegativeInteger"},
-        "outputTokens": {"$ref": "common.schema.json#/$defs/nonNegativeInteger"},
-        "toolCalls": {"$ref": "common.schema.json#/$defs/nonNegativeInteger"}
+        "latencyMs": {
+          "$ref": "common.schema.json#/$defs/nonNegativeNumber"
+        },
+        "estimatedCost": {
+          "$ref": "common.schema.json#/$defs/nonNegativeNumber"
+        },
+        "currency": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}$"
+        },
+        "inputTokens": {
+          "$ref": "common.schema.json#/$defs/nonNegativeInteger"
+        },
+        "outputTokens": {
+          "$ref": "common.schema.json#/$defs/nonNegativeInteger"
+        },
+        "toolCalls": {
+          "$ref": "common.schema.json#/$defs/nonNegativeInteger"
+        }
       }
     },
     "reproducibility": {
@@ -100,10 +198,18 @@
       "additionalProperties": false,
       "required": ["configHash", "recordedAt"],
       "properties": {
-        "configHash": {"$ref": "common.schema.json#/$defs/sha256"},
-        "recordedAt": {"$ref": "common.schema.json#/$defs/timestamp"},
-        "traceReference": {"type": "string"},
-        "artifactDigest": {"$ref": "common.schema.json#/$defs/sha256"}
+        "configHash": {
+          "$ref": "common.schema.json#/$defs/sha256"
+        },
+        "recordedAt": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        "traceReference": {
+          "type": "string"
+        },
+        "artifactDigest": {
+          "$ref": "common.schema.json#/$defs/sha256"
+        }
       }
     },
     "evidence": {
@@ -113,9 +219,17 @@
         "additionalProperties": false,
         "required": ["type", "reference"],
         "properties": {
-          "type": {"type": "string", "enum": ["trace", "artifact", "log", "report", "human-review"]},
-          "reference": {"type": "string", "minLength": 1},
-          "hash": {"$ref": "common.schema.json#/$defs/sha256"}
+          "type": {
+            "type": "string",
+            "enum": ["trace", "artifact", "log", "report", "human-review"]
+          },
+          "reference": {
+            "type": "string",
+            "minLength": 1
+          },
+          "hash": {
+            "$ref": "common.schema.json#/$defs/sha256"
+          }
         }
       }
     }

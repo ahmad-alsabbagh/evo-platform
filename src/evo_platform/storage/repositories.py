@@ -11,18 +11,11 @@ from evo_platform.storage.models import EvaluationRun
 
 class EvaluationRunRepository(Protocol):
     async def create(
-        self,
-        value: EvaluationRunInput,
-        *,
-        created_by: str | None = None,
+        self, value: EvaluationRunInput, *, created_by: str | None = None
     ) -> EvaluationRun: ...
-
     async def get(self, run_id: str) -> EvaluationRun | None: ...
-
     async def list_for_capability(
-        self,
-        capability_id: str,
-        limit: int = 100,
+        self, capability_id: str, limit: int = 100
     ) -> Sequence[EvaluationRun]: ...
 
 
@@ -31,10 +24,7 @@ class SqlAlchemyEvaluationRunRepository:
         self.session = session
 
     async def create(
-        self,
-        value: EvaluationRunInput,
-        *,
-        created_by: str | None = None,
+        self, value: EvaluationRunInput, *, created_by: str | None = None
     ) -> EvaluationRun:
         record = EvaluationRun(
             id=value.id,
@@ -64,9 +54,7 @@ class SqlAlchemyEvaluationRunRepository:
         return await self.session.get(EvaluationRun, run_id)
 
     async def list_for_capability(
-        self,
-        capability_id: str,
-        limit: int = 100,
+        self, capability_id: str, limit: int = 100
     ) -> Sequence[EvaluationRun]:
         bounded_limit = max(1, min(limit, 1000))
         result = await self.session.execute(

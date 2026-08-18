@@ -56,10 +56,7 @@ class RedisStreamQueue:
         await self.client.xack(self.stream, self.group, message_id)
 
     async def claim_stale(
-        self,
-        consumer: str,
-        min_idle_ms: int,
-        count: int = 10,
+        self, consumer: str, min_idle_ms: int, count: int = 10
     ) -> list[tuple[str, EvaluationJob]]:
         await self.ensure_group()
         claimed = await self.client.xautoclaim(
@@ -73,12 +70,7 @@ class RedisStreamQueue:
         messages = claimed[1] if len(claimed) > 1 else []
         return self._decode([(self.stream, messages)])
 
-    async def move_to_dead_letter(
-        self,
-        message_id: str,
-        job: EvaluationJob,
-        reason: str,
-    ) -> None:
+    async def move_to_dead_letter(self, message_id: str, job: EvaluationJob, reason: str) -> None:
         await self.client.xadd(
             self.dead_letter_stream,
             {

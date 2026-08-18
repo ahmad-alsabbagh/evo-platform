@@ -14,17 +14,10 @@ from evo_platform.storage.models import (
 
 class CatalogRepository(Protocol):
     async def publish_if_promoted(
-        self,
-        entry: CatalogEntry,
-        decision: PromotionDecision,
+        self, entry: CatalogEntry, decision: PromotionDecision
     ) -> CatalogEntry: ...
-
     async def get(self, entry_id: str) -> CatalogEntry | None: ...
-
-    async def list_published(
-        self,
-        limit: int = 100,
-    ) -> Sequence[CatalogEntryRecord]: ...
+    async def list_published(self, limit: int = 100) -> Sequence[CatalogEntryRecord]: ...
 
 
 class SqlAlchemyCatalogRepository:
@@ -32,9 +25,7 @@ class SqlAlchemyCatalogRepository:
         self.session = session
 
     async def publish_if_promoted(
-        self,
-        entry: CatalogEntry,
-        decision: PromotionDecision,
+        self, entry: CatalogEntry, decision: PromotionDecision
     ) -> CatalogEntry:
         if decision.state != PromotionState.promoted:
             raise ValueError("catalog publication requires a promoted decision")
@@ -88,10 +79,7 @@ class SqlAlchemyCatalogRepository:
             return None
         return CatalogEntry.model_validate(record.payload)
 
-    async def list_published(
-        self,
-        limit: int = 100,
-    ) -> Sequence[CatalogEntryRecord]:
+    async def list_published(self, limit: int = 100) -> Sequence[CatalogEntryRecord]:
         result = await self.session.execute(
             select(CatalogEntryRecord)
             .where(CatalogEntryRecord.lifecycle == PromotionState.promoted.value)

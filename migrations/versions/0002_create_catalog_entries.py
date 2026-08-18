@@ -18,21 +18,13 @@ def upgrade() -> None:
         sa.Column("risk_level", sa.String(length=16), nullable=False),
         sa.Column("payload", postgresql.JSONB(), nullable=False),
         sa.Column(
-            "published_at",
-            sa.DateTime(timezone=True),
-            server_default=sa.func.now(),
-            nullable=False,
+            "published_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
         ),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default=sa.func.now(),
-            nullable=False,
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
         ),
         sa.UniqueConstraint(
-            "capability_id",
-            "capability_version",
-            name="uq_catalog_capability_version",
+            "capability_id", "capability_version", name="uq_catalog_capability_version"
         ),
     )
     op.create_index("ix_catalog_entries_lifecycle", "catalog_entries", ["lifecycle"])
@@ -50,22 +42,13 @@ def upgrade() -> None:
         sa.Column("actor", sa.String(length=256)),
         sa.Column("artifact_digest", sa.String(length=71)),
         sa.Column(
-            "created_at",
-            sa.DateTime(timezone=True),
-            server_default=sa.func.now(),
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
         ),
-        sa.ForeignKeyConstraint(
-            ["catalog_entry_id"], ["catalog_entries.id"], ondelete="RESTRICT"
-        ),
-        sa.ForeignKeyConstraint(
-            ["evaluation_run_id"], ["evaluation_runs.id"], ondelete="RESTRICT"
-        ),
+        sa.ForeignKeyConstraint(["catalog_entry_id"], ["catalog_entries.id"], ondelete="RESTRICT"),
+        sa.ForeignKeyConstraint(["evaluation_run_id"], ["evaluation_runs.id"], ondelete="RESTRICT"),
     )
     op.create_index(
-        "ix_promotion_decisions_catalog_id",
-        "promotion_decisions",
-        ["catalog_entry_id"],
+        "ix_promotion_decisions_catalog_id", "promotion_decisions", ["catalog_entry_id"]
     )
     op.create_index("ix_promotion_decisions_created_at", "promotion_decisions", ["created_at"])
 

@@ -12,7 +12,7 @@ def load(name: str) -> dict:
 
 def validator(name: str) -> Draft202012Validator:
     schema = load(name)
-    store = {path.name: load(path.name) for path in SCHEMA_DIR.glob("*.json")}
+    store = {"taxonomy.schema.json": load("taxonomy.schema.json")}
     return Draft202012Validator(schema, resolver=RefResolver(name, schema, store=store))
 
 
@@ -41,10 +41,7 @@ def test_catalog_entry_valid() -> None:
         "lifecycle": "evaluated",
         "quality": {"evaluationStatus": "passed", "score": 0.91},
         "license": {"identifier": "Apache-2.0"},
-        "provenance": {
-            "sourceType": "original",
-            "createdAt": "2026-01-01T00:00:00Z",
-        },
+        "provenance": {"sourceType": "original", "createdAt": "2026-01-01T00:00:00Z"},
     }
     assert list(validator("catalog-entry.schema.json").iter_errors(fixture)) == []
 
@@ -58,9 +55,6 @@ def test_collection_rejects_empty_items() -> None:
         "owner": "team",
         "items": [],
         "license": {"identifier": "Apache-2.0"},
-        "provenance": {
-            "sourceType": "original",
-            "createdAt": "2026-01-01T00:00:00Z",
-        },
+        "provenance": {"sourceType": "original", "createdAt": "2026-01-01T00:00:00Z"},
     }
     assert list(validator("collection.schema.json").iter_errors(fixture))

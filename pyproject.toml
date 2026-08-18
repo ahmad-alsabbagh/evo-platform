@@ -27,8 +27,8 @@ dev = [
   "jsonschema>=4.23,<5.0",
   "mypy>=1.13,<2.0",
   "pip-audit>=2.7,<3.0",
-  "pytest>=8.3,<9.0",
-  "pytest-asyncio>=0.24,<1.0",
+  "pytest>=9.0.3",
+  "pytest-asyncio>=0.27",
   "pytest-cov>=6.0,<7.0",
   "pytest-json-report>=1.5,<2.0",
   "ruff>=0.8,<1.0",
@@ -61,4 +61,4 @@ warn_unreachable = true
 addopts = "--strict-config --strict-markers --cov=evo_platform --cov-report=term-missing"
 pythonpath = ["src"]
 asyncio_mode = "auto"
-markers = ["integration: requires a PostgreSQL and Redis service"]
+markers = ["integration: requires a PostgreSQL service"]

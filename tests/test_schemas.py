@@ -35,10 +35,6 @@ def test_experiment_schema_resolves_defs() -> None:
             "maxCostIncrease": 0.1,
             "maxP95LatencyIncrease": 0.2,
         },
-        "trafficPlan": {
-            "mode": "shadow",
-            "steps": [1, 5],
-            "rollbackOn": ["safety_regression"],
-        },
+        "trafficPlan": {"mode": "shadow", "steps": [1, 5], "rollbackOn": ["safety_regression"]},
     }
     assert list(validator("experiment.schema.json").iter_errors(fixture)) == []

@@ -12,7 +12,6 @@ from sqlalchemy.ext.asyncio import (
 from evo_platform.config import get_settings
 from evo_platform.observability.tracing import configure_tracing
 
-
 DEFAULT_POOL_SIZE: Final = 5
 DEFAULT_MAX_OVERFLOW: Final = 10
 

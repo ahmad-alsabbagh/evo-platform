@@ -4,7 +4,6 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-
 RiskLevel = Literal["low", "medium", "high", "critical"]
 
 
