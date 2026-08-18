@@ -1,5 +1,5 @@
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "0002_create_catalog_entries"
@@ -17,9 +17,23 @@ def upgrade() -> None:
         sa.Column("lifecycle", sa.String(length=32), nullable=False),
         sa.Column("risk_level", sa.String(length=16), nullable=False),
         sa.Column("payload", postgresql.JSONB(), nullable=False),
-        sa.Column("published_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.UniqueConstraint("capability_id", "capability_version", name="uq_catalog_capability_version"),
+        sa.Column(
+            "published_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.func.now(),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.func.now(),
+            nullable=False,
+        ),
+        sa.UniqueConstraint(
+            "capability_id",
+            "capability_version",
+            name="uq_catalog_capability_version",
+        ),
     )
     op.create_index("ix_catalog_entries_lifecycle", "catalog_entries", ["lifecycle"])
     op.create_index("ix_catalog_entries_risk_level", "catalog_entries", ["risk_level"])
@@ -35,11 +49,24 @@ def upgrade() -> None:
         sa.Column("reasons", postgresql.JSONB(), nullable=False),
         sa.Column("actor", sa.String(length=256)),
         sa.Column("artifact_digest", sa.String(length=71)),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.ForeignKeyConstraint(["catalog_entry_id"], ["catalog_entries.id"], ondelete="RESTRICT"),
-        sa.ForeignKeyConstraint(["evaluation_run_id"], ["evaluation_runs.id"], ondelete="RESTRICT"),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.func.now(),
+            nullable=False,
+        ),
+        sa.ForeignKeyConstraint(
+            ["catalog_entry_id"], ["catalog_entries.id"], ondelete="RESTRICT"
+        ),
+        sa.ForeignKeyConstraint(
+            ["evaluation_run_id"], ["evaluation_runs.id"], ondelete="RESTRICT"
+        ),
     )
-    op.create_index("ix_promotion_decisions_catalog_id", "promotion_decisions", ["catalog_entry_id"])
+    op.create_index(
+        "ix_promotion_decisions_catalog_id",
+        "promotion_decisions",
+        ["catalog_entry_id"],
+    )
     op.create_index("ix_promotion_decisions_created_at", "promotion_decisions", ["created_at"])
 
 

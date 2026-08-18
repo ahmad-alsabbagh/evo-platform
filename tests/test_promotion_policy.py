@@ -1,4 +1,4 @@
-from evo_platform.catalog.models import CatalogEntry
+from evo_platform.catalog.models import CatalogEntry, PromotionState
 from evo_platform.catalog.policy import PromotionPolicy
 
 
@@ -35,18 +35,17 @@ def entry(**overrides) -> CatalogEntry:
 
 def test_policy_promotes_qualified_entry() -> None:
     decision = policy().evaluate(entry())
-    assert decision.allowed is True
-    assert decision.target_lifecycle == "promoted"
+    assert decision.state == PromotionState.promoted
 
 
 def test_policy_rejects_regression_failure() -> None:
     quality = entry().quality.model_copy(update={"regression_status": "failed"})
     decision = policy().evaluate(entry(quality=quality))
-    assert decision.allowed is False
+    assert decision.state == PromotionState.rejected
     assert "regression_not_passed" in decision.reasons
 
 
 def test_policy_requires_human_review_for_medium_risk() -> None:
     decision = policy().evaluate(entry(risk_level="medium"))
-    assert decision.allowed is False
+    assert decision.state == PromotionState.rejected
     assert "human_review_required" in decision.reasons

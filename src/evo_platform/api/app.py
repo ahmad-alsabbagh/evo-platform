@@ -1,3 +1,5 @@
+from collections.abc import Awaitable, Callable
+from typing import Any
 from uuid import uuid4
 
 import structlog
@@ -10,7 +12,11 @@ from evo_platform.observability import configure_logging, configure_tracing
 
 
 class RequestIdMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
+    async def dispatch(
+        self,
+        request: Request,
+        call_next: Callable[[Request], Awaitable[Any]],
+    ) -> Any:
         request_id = request.headers.get("X-Request-ID", str(uuid4()))
         structlog.contextvars.bind_contextvars(request_id=request_id)
         try:

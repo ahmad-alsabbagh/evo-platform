@@ -7,7 +7,7 @@ from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExportResult, SpanExporter
+from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter, SpanExportResult
 from opentelemetry.sdk.trace.sampling import ParentBased, TraceIdRatioBased
 
 
@@ -37,12 +37,16 @@ def configure_tracing(
             resource=Resource.create({SERVICE_NAME: service_name}),
             sampler=ParentBased(TraceIdRatioBased(sample_ratio)),
         )
-        exporter: SpanExporter = OTLPSpanExporter(endpoint=endpoint, insecure=True) if endpoint else _NoopExporter()
+        exporter: SpanExporter = (
+            OTLPSpanExporter(endpoint=endpoint, insecure=True)
+            if endpoint
+            else _NoopExporter()
+        )
         provider.add_span_processor(BatchSpanProcessor(exporter))
         trace.set_tracer_provider(provider)
         _configured = True
     if not _instrumented_fastapi:
-        FastAPIInstrumentor.instrument()
+        FastAPIInstrumentor().instrument()
         _instrumented_fastapi = True
     if engine is not None and id(engine) not in _instrumented_engines:
         SQLAlchemyInstrumentor().instrument(engine=engine)

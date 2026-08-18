@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Index, String, UniqueConstraint, func
+from sqlalchemy import DateTime, ForeignKey, Index, String, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -27,7 +27,11 @@ class EvaluationRun(Base):
     status: Mapped[str] = mapped_column(String(32), nullable=False)
     promotion: Mapped[str] = mapped_column(String(32), nullable=False)
     payload: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_by: Mapped[str | None] = mapped_column(String(256))
 
@@ -35,7 +39,11 @@ class EvaluationRun(Base):
 class CatalogEntryRecord(Base):
     __tablename__ = "catalog_entries"
     __table_args__ = (
-        UniqueConstraint("capability_id", "capability_version", name="uq_catalog_capability_version"),
+        UniqueConstraint(
+            "capability_id",
+            "capability_version",
+            name="uq_catalog_capability_version",
+        ),
         Index("ix_catalog_entries_lifecycle", "lifecycle"),
         Index("ix_catalog_entries_risk_level", "risk_level"),
     )
@@ -46,8 +54,17 @@ class CatalogEntryRecord(Base):
     lifecycle: Mapped[str] = mapped_column(String(32), nullable=False)
     risk_level: Mapped[str] = mapped_column(String(16), nullable=False)
     payload: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
-    published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    published_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
 
 
 class PromotionDecisionRecord(Base):
@@ -59,8 +76,14 @@ class PromotionDecisionRecord(Base):
     )
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
-    catalog_entry_id: Mapped[str] = mapped_column(ForeignKey("catalog_entries.id", ondelete="RESTRICT"), nullable=False)
-    evaluation_run_id: Mapped[str] = mapped_column(ForeignKey("evaluation_runs.id", ondelete="RESTRICT"), nullable=False)
+    catalog_entry_id: Mapped[str] = mapped_column(
+        ForeignKey("catalog_entries.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    evaluation_run_id: Mapped[str] = mapped_column(
+        ForeignKey("evaluation_runs.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
     state: Mapped[str] = mapped_column(String(32), nullable=False)
     policy_version: Mapped[str] = mapped_column(String(32), nullable=False)
     policy_snapshot_hash: Mapped[str | None] = mapped_column(String(71))
@@ -68,4 +91,8 @@ class PromotionDecisionRecord(Base):
     reasons: Mapped[list[str]] = mapped_column(JSONB, nullable=False)
     actor: Mapped[str | None] = mapped_column(String(256))
     artifact_digest: Mapped[str | None] = mapped_column(String(71))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )

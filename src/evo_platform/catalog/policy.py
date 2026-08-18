@@ -1,4 +1,10 @@
-from evo_platform.catalog.models import CatalogEntry, PromotionDecision
+from uuid import uuid4
+
+from evo_platform.catalog.models import (
+    CatalogEntry,
+    PromotionDecision,
+    PromotionState,
+)
 
 
 class PromotionPolicy:
@@ -32,7 +38,10 @@ class PromotionPolicy:
             reasons.append("evaluation_not_passed")
         if quality.score is None or quality.score < self.minimum_score:
             reasons.append("score_below_threshold")
-        if quality.reproducibility is None or quality.reproducibility < self.minimum_reproducibility:
+        if (
+            quality.reproducibility is None
+            or quality.reproducibility < self.minimum_reproducibility
+        ):
             reasons.append("reproducibility_below_threshold")
         if quality.trust is None or quality.trust < self.minimum_trust:
             reasons.append("trust_below_threshold")
@@ -47,9 +56,11 @@ class PromotionPolicy:
         if entry.risk_level in self.require_human_review_for and not entry.human_reviewed:
             reasons.append("human_review_required")
         allowed = not reasons
+        state = PromotionState.promoted if allowed else PromotionState.rejected
         return PromotionDecision(
-            allowed=allowed,
-            target_lifecycle="promoted" if allowed else "rejected",
+            decision_id=uuid4(),
+            idempotency_key=f"promotion:{entry.id}:{self.policy_version}",
+            state=state,
             reasons=reasons,
             policy_version=self.policy_version,
         )

@@ -1,30 +1,57 @@
 import logging
 import sys
-from collections.abc import Mapping
+from collections.abc import Mapping, MutableMapping
 from typing import Any
 
 import structlog
 from opentelemetry import trace
 
-SENSITIVE_KEYS = frozenset({"password", "token", "secret", "authorization", "api_key", "apikey", "prompt", "output", "content"})
+
+SENSITIVE_KEYS = frozenset(
+    {
+        "password",
+        "token",
+        "secret",
+        "authorization",
+        "api_key",
+        "apikey",
+        "prompt",
+        "output",
+        "content",
+    }
+)
 
 
-def redact_sensitive(_: Any, __: str, event_dict: dict[str, Any]) -> dict[str, Any]:
+def redact_sensitive(
+    _: Any,
+    __: str,
+    event_dict: MutableMapping[str, Any],
+) -> MutableMapping[str, Any]:
     def scrub(value: Any, key: str | None = None) -> Any:
-        if key and key.lower() in SENSITIVE_KEYS:
+        if key is not None and key.lower() in SENSITIVE_KEYS:
             return "[REDACTED]"
         if isinstance(value, Mapping):
-            return {str(k): scrub(v, str(k)) for k, v in value.items()}
+            return {
+                str(item_key): scrub(item_value, str(item_key))
+                for item_key, item_value in value.items()
+            }
         if isinstance(value, list):
             return [scrub(item) for item in value]
         if isinstance(value, tuple):
             return tuple(scrub(item) for item in value)
         return value
 
-    return scrub(event_dict)
+    scrubbed = scrub(dict(event_dict))
+    if not isinstance(scrubbed, dict):
+        raise TypeError("redaction must return a mapping")
+    return scrubbed
 
 
-def add_trace_context(_: Any, __: str, event_dict: dict[str, Any]) -> dict[str, Any]:
+def add_trace_context(
+    _: Any,
+    __: str,
+    event_dict: MutableMapping[str, Any],
+) -> MutableMapping[str, Any]:
     context = trace.get_current_span().get_span_context()
     if context.is_valid:
         event_dict["trace_id"] = format(context.trace_id, "032x")
@@ -47,4 +74,9 @@ def configure_logging() -> None:
         wrapper_class=structlog.stdlib.BoundLogger,
         cache_logger_on_first_use=True,
     )
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(message)s", force=True)
+    logging.basicConfig(
+        stream=sys.stdout,
+        level=logging.INFO,
+        format="%(message)s",
+        force=True,
+    )

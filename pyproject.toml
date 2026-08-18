@@ -42,12 +42,18 @@ build-backend = "hatchling.build"
 packages = ["src/evo_platform"]
 
 [tool.ruff]
-target-version = "py312"
+target-version = "py314"
 line-length = 100
+
+[tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "S"]
 
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101", "S105"]
+"tests/*.py" = ["S101", "S105"]
+
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.14"
 strict = true
 warn_unreachable = true
 
@@ -55,4 +61,4 @@ warn_unreachable = true
 addopts = "--strict-config --strict-markers --cov=evo_platform --cov-report=term-missing"
 pythonpath = ["src"]
 asyncio_mode = "auto"
-markers = ["integration: requires a PostgreSQL service"]
+markers = ["integration: requires a PostgreSQL and Redis service"]

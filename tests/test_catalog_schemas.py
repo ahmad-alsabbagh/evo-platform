@@ -12,12 +12,17 @@ def load(name: str) -> dict:
 
 def validator(name: str) -> Draft202012Validator:
     schema = load(name)
-    store = {"taxonomy.schema.json": load("taxonomy.schema.json")}
+    store = {path.name: load(path.name) for path in SCHEMA_DIR.glob("*.json")}
     return Draft202012Validator(schema, resolver=RefResolver(name, schema, store=store))
 
 
 def test_taxonomy_valid() -> None:
-    fixture = {"taxonomyVersion": "1.0.0", "category": "AI Agents", "slug": "ai-agents", "riskLevel": "medium"}
+    fixture = {
+        "taxonomyVersion": "1.0.0",
+        "category": "AI Agents",
+        "slug": "ai-agents",
+        "riskLevel": "medium",
+    }
     assert list(validator("taxonomy.schema.json").iter_errors(fixture)) == []
 
 
@@ -27,11 +32,19 @@ def test_catalog_entry_valid() -> None:
         "schemaVersion": "1.0.0",
         "title": "Summarizer",
         "capability": {"id": "summarize", "version": "1.0.0"},
-        "taxonomy": {"taxonomyVersion": "1.0.0", "category": "AI", "slug": "ai", "riskLevel": "low"},
+        "taxonomy": {
+            "taxonomyVersion": "1.0.0",
+            "category": "AI",
+            "slug": "ai",
+            "riskLevel": "low",
+        },
         "lifecycle": "evaluated",
         "quality": {"evaluationStatus": "passed", "score": 0.91},
         "license": {"identifier": "Apache-2.0"},
-        "provenance": {"sourceType": "original", "createdAt": "2026-01-01T00:00:00Z"},
+        "provenance": {
+            "sourceType": "original",
+            "createdAt": "2026-01-01T00:00:00Z",
+        },
     }
     assert list(validator("catalog-entry.schema.json").iter_errors(fixture)) == []
 
@@ -45,6 +58,9 @@ def test_collection_rejects_empty_items() -> None:
         "owner": "team",
         "items": [],
         "license": {"identifier": "Apache-2.0"},
-        "provenance": {"sourceType": "original", "createdAt": "2026-01-01T00:00:00Z"},
+        "provenance": {
+            "sourceType": "original",
+            "createdAt": "2026-01-01T00:00:00Z",
+        },
     }
     assert list(validator("collection.schema.json").iter_errors(fixture))

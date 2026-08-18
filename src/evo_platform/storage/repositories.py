@@ -10,16 +10,32 @@ from evo_platform.storage.models import EvaluationRun
 
 
 class EvaluationRunRepository(Protocol):
-    async def create(self, value: EvaluationRunInput, *, created_by: str | None = None) -> EvaluationRun: ...
+    async def create(
+        self,
+        value: EvaluationRunInput,
+        *,
+        created_by: str | None = None,
+    ) -> EvaluationRun: ...
+
     async def get(self, run_id: str) -> EvaluationRun | None: ...
-    async def list_for_capability(self, capability_id: str, limit: int = 100) -> Sequence[EvaluationRun]: ...
+
+    async def list_for_capability(
+        self,
+        capability_id: str,
+        limit: int = 100,
+    ) -> Sequence[EvaluationRun]: ...
 
 
 class SqlAlchemyEvaluationRunRepository:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
-    async def create(self, value: EvaluationRunInput, *, created_by: str | None = None) -> EvaluationRun:
+    async def create(
+        self,
+        value: EvaluationRunInput,
+        *,
+        created_by: str | None = None,
+    ) -> EvaluationRun:
         record = EvaluationRun(
             id=value.id,
             schema_version=value.schema_version,
@@ -47,7 +63,11 @@ class SqlAlchemyEvaluationRunRepository:
     async def get(self, run_id: str) -> EvaluationRun | None:
         return await self.session.get(EvaluationRun, run_id)
 
-    async def list_for_capability(self, capability_id: str, limit: int = 100) -> Sequence[EvaluationRun]:
+    async def list_for_capability(
+        self,
+        capability_id: str,
+        limit: int = 100,
+    ) -> Sequence[EvaluationRun]:
         bounded_limit = max(1, min(limit, 1000))
         result = await self.session.execute(
             select(EvaluationRun)

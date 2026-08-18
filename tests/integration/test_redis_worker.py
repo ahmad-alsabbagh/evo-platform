@@ -49,7 +49,12 @@ async def test_claim_stale_recovers_unacked_messages(client) -> None:
 
 @pytest.mark.integration
 async def test_move_to_dead_letter(client) -> None:
-    queue = RedisStreamQueue(client, stream="test:evaluation:dlq-src", group="test-group", dead_letter_stream="test:evaluation:dlq")
+    queue = RedisStreamQueue(
+        client,
+        stream="test:evaluation:dlq-src",
+        group="test-group",
+        dead_letter_stream="test:evaluation:dlq",
+    )
     job = EvaluationJob(job_id="job-3", run_id="run-3", idempotency_key="key-3", payload={})
 
     await queue.enqueue(job)

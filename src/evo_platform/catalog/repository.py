@@ -5,20 +5,37 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from evo_platform.catalog.models import CatalogEntry, PromotionDecision, PromotionState
-from evo_platform.storage.models import CatalogEntryRecord, PromotionDecisionRecord, EvaluationRun
+from evo_platform.storage.models import (
+    CatalogEntryRecord,
+    EvaluationRun,
+    PromotionDecisionRecord,
+)
 
 
 class CatalogRepository(Protocol):
-    async def publish_if_promoted(self, entry: CatalogEntry, decision: PromotionDecision) -> CatalogEntry: ...
+    async def publish_if_promoted(
+        self,
+        entry: CatalogEntry,
+        decision: PromotionDecision,
+    ) -> CatalogEntry: ...
+
     async def get(self, entry_id: str) -> CatalogEntry | None: ...
-    async def list_published(self, limit: int = 100) -> Sequence[CatalogEntryRecord]: ...
+
+    async def list_published(
+        self,
+        limit: int = 100,
+    ) -> Sequence[CatalogEntryRecord]: ...
 
 
 class SqlAlchemyCatalogRepository:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
-    async def publish_if_promoted(self, entry: CatalogEntry, decision: PromotionDecision) -> CatalogEntry:
+    async def publish_if_promoted(
+        self,
+        entry: CatalogEntry,
+        decision: PromotionDecision,
+    ) -> CatalogEntry:
         if decision.state != PromotionState.promoted:
             raise ValueError("catalog publication requires a promoted decision")
         if decision.evaluation_run_id is None:
@@ -26,9 +43,16 @@ class SqlAlchemyCatalogRepository:
         evaluation = await self.session.get(EvaluationRun, decision.evaluation_run_id)
         if evaluation is None:
             raise ValueError("evaluation_run_not_found")
-        if evaluation.capability_id != entry.capability_id or evaluation.capability_version != entry.capability_version:
+        if (
+            evaluation.capability_id != entry.capability_id
+            or evaluation.capability_version != entry.capability_version
+        ):
             raise ValueError("evaluation_capability_mismatch")
-        if decision.artifact_digest and entry.artifact_digest and decision.artifact_digest != entry.artifact_digest:
+        if (
+            decision.artifact_digest
+            and entry.artifact_digest
+            and decision.artifact_digest != entry.artifact_digest
+        ):
             raise ValueError("artifact_digest_mismatch")
         existing = await self.session.get(PromotionDecisionRecord, str(decision.decision_id))
         if existing is not None:
@@ -64,7 +88,10 @@ class SqlAlchemyCatalogRepository:
             return None
         return CatalogEntry.model_validate(record.payload)
 
-    async def list_published(self, limit: int = 100) -> Sequence[CatalogEntryRecord]:
+    async def list_published(
+        self,
+        limit: int = 100,
+    ) -> Sequence[CatalogEntryRecord]:
         result = await self.session.execute(
             select(CatalogEntryRecord)
             .where(CatalogEntryRecord.lifecycle == PromotionState.promoted.value)

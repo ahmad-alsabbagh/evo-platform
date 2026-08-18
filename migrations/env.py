@@ -10,7 +10,10 @@ from evo_platform.storage.models import Base
 
 config = context.config
 if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
+    try:
+        fileConfig(config.config_file_name)
+    except KeyError:
+        pass
 
 
 def configured_database_url() -> str:

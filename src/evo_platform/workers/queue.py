@@ -1,4 +1,4 @@
-from typing import Protocol
+from typing import Any, Protocol
 
 from redis.asyncio import Redis
 
@@ -9,8 +9,12 @@ class JobQueue(Protocol):
     async def enqueue(self, job: EvaluationJob) -> str: ...
     async def read(self, consumer: str, count: int = 10) -> list[tuple[str, EvaluationJob]]: ...
     async def acknowledge(self, message_id: str) -> None: ...
-    async def claim_stale(self, consumer: str, min_idle_ms: int, count: int = 10) -> list[tuple[str, EvaluationJob]]: ...
-    async def move_to_dead_letter(self, message_id: str, job: EvaluationJob, reason: str) -> None: ...
+    async def claim_stale(
+        self, consumer: str, min_idle_ms: int, count: int = 10
+    ) -> list[tuple[str, EvaluationJob]]: ...
+    async def move_to_dead_letter(
+        self, message_id: str, job: EvaluationJob, reason: str
+    ) -> None: ...
 
 
 class RedisStreamQueue:
@@ -35,7 +39,7 @@ class RedisStreamQueue:
 
     async def enqueue(self, job: EvaluationJob) -> str:
         message_id = await self.client.xadd(self.stream, {"payload": job.model_dump_json()})
-        return str(message_id)
+        return message_id.decode() if isinstance(message_id, bytes) else str(message_id)
 
     async def read(self, consumer: str, count: int = 10) -> list[tuple[str, EvaluationJob]]:
         await self.ensure_group()
@@ -51,7 +55,12 @@ class RedisStreamQueue:
     async def acknowledge(self, message_id: str) -> None:
         await self.client.xack(self.stream, self.group, message_id)
 
-    async def claim_stale(self, consumer: str, min_idle_ms: int, count: int = 10) -> list[tuple[str, EvaluationJob]]:
+    async def claim_stale(
+        self,
+        consumer: str,
+        min_idle_ms: int,
+        count: int = 10,
+    ) -> list[tuple[str, EvaluationJob]]:
         await self.ensure_group()
         claimed = await self.client.xautoclaim(
             self.stream,
@@ -64,7 +73,12 @@ class RedisStreamQueue:
         messages = claimed[1] if len(claimed) > 1 else []
         return self._decode([(self.stream, messages)])
 
-    async def move_to_dead_letter(self, message_id: str, job: EvaluationJob, reason: str) -> None:
+    async def move_to_dead_letter(
+        self,
+        message_id: str,
+        job: EvaluationJob,
+        reason: str,
+    ) -> None:
         await self.client.xadd(
             self.dead_letter_stream,
             {
@@ -76,10 +90,13 @@ class RedisStreamQueue:
         await self.acknowledge(message_id)
 
     @staticmethod
-    def _decode(result: list) -> list[tuple[str, EvaluationJob]]:
+    def _decode(result: list[Any]) -> list[tuple[str, EvaluationJob]]:
+        def to_text(value: Any) -> str:
+            return value.decode() if isinstance(value, bytes) else str(value)
+
         decoded: list[tuple[str, EvaluationJob]] = []
         for _, messages in result:
             for message_id, fields in messages:
                 payload = fields[b"payload"] if b"payload" in fields else fields["payload"]
-                decoded.append((str(message_id), EvaluationJob.model_validate_json(payload)))
+                decoded.append((to_text(message_id), EvaluationJob.model_validate_json(payload)))
         return decoded
