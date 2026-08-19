@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  security-events: write
 
 env:
   UV_VERSION: "0.12.5"
