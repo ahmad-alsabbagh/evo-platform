@@ -41,7 +41,7 @@ jobs:
       EVO_DATABASE_URL: postgresql+asyncpg://evo:evo@localhost:5432/evo
       EVO_REDIS_URL: redis://localhost:6379/0
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
           python-version: "3.14"
@@ -63,10 +63,58 @@ jobs:
         run: uv run bandit -r src -ll
       - name: Dependency audit
         run: uv run pip-audit --skip-editable
+      - name: Install Gitleaks
+        shell: bash
+        run: |
+          set -euo pipefail
+          GITLEAKS_VERSION="8.30.1"
+          curl -fsSL \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+            -o /tmp/gitleaks.tar.gz
+          tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
+          sudo install -m 0755 /tmp/gitleaks /usr/local/bin/gitleaks
+          gitleaks version
+
       - name: Secret scan
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        id: gitleaks
+        shell: bash
+        run: |
+          set +e
+          gitleaks git . \
+            --redact \
+            --report-format sarif \
+            --report-path gitleaks.sarif \
+            --exit-code 2
+          code=$?
+          set -e
+
+          if [ "$code" -eq 0 ]; then
+            echo "No secrets found"
+            exit 0
+          fi
+
+          if [ "$code" -eq 2 ]; then
+            echo "::error::Gitleaks found secrets"
+            exit 1
+          fi
+
+          echo "::error::Gitleaks execution failed with exit code $code"
+          exit "$code"
+
+      - name: Verify Gitleaks report
+        if: always()
+        shell: bash
+        run: |
+          test -f gitleaks.sarif || {
+            echo "::error::Gitleaks did not produce gitleaks.sarif"
+            exit 1
+          }
+
+      - name: Upload Gitleaks SARIF
+        if: always() && hashFiles('gitleaks.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: gitleaks.sarif
       - name: Unit and contract tests
         run: uv run pytest -m "not integration"
       - name: Apply database migrations
