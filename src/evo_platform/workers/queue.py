@@ -63,7 +63,7 @@ class RedisStreamQueue:
             self.stream,
             self.group,
             consumer,
-            min_idle_time=max(1, min_idle_ms),
+            min_idle_time=max(0, min_idle_ms),
             start_id="0-0",
             count=max(1, min(count, 100)),
         )
