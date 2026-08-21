@@ -1,0 +1,56 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: evo-platform-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: evo
+      POSTGRES_PASSWORD: evo_dev_password
+      POSTGRES_DB: evo_platform
+    ports:
+      - "5432:5432"
+    volumes:
+      - evo_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U evo -d evo_platform"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: evo-platform-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Ollama - FREE local LLM (optional)
+  # Run: docker-compose up -d ollama
+  # Then: docker exec -it evo-platform-ollama ollama pull llama3
+  ollama:
+    image: ollama/ollama:latest
+    container_name: evo-platform-ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - evo_ollama_data:/root/.ollama
+    # Uncomment for GPU support:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #         devices:
+    #           - driver: nvidia
+    #             count: 1
+    #             capabilities: [gpu]
+
+volumes:
+  evo_postgres_data:
+  evo_ollama_data:

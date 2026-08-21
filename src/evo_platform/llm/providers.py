@@ -1,6 +1,6 @@
 """Unified LLM provider interface with cost tracking.
 
-Supports OpenAI and Anthropic with automatic token counting and cost calculation.
+Supports OpenAI, Anthropic, Groq, and Ollama with automatic token counting and cost calculation.
 Costs are tracked per request and integrated with the existing CostTracker.
 """
 
@@ -28,6 +28,97 @@ class LLMProviderBase(ABC):
     def call(self, messages: List[Dict[str, str]], **kwargs) -> LLMResponse:
         """Call the LLM with messages and return unified response."""
         pass
+
+
+class OllamaProvider(LLMProviderBase):
+    """Ollama local LLM provider - FREE, no API key needed.
+    
+    Runs models locally via Ollama (ollama.ai).
+    Supports: llama3, mistral, gemma, phi, and more.
+    """
+
+    def __init__(self, model: str = "llama3", base_url: str = "http://localhost:11434"):
+        self.model = model
+        self.base_url = base_url
+        # Ollama is free - running locally
+        self.pricing = {"input": 0.0, "output": 0.0}
+
+    def call(self, messages: List[Dict[str, str]], **kwargs) -> LLMResponse:
+        import httpx
+        
+        response = httpx.post(
+            f"{self.base_url}/api/chat",
+            json={
+                "model": self.model,
+                "messages": messages,
+                "stream": False,
+            },
+            timeout=120.0,
+        )
+        response.raise_for_status()
+        data = response.json()
+        
+        content = data["message"]["content"]
+        # Ollama doesn't provide token counts in older versions
+        # Estimate: ~4 chars per token
+        input_chars = sum(len(m["content"]) for m in messages)
+        output_chars = len(content)
+        input_tokens = input_chars // 4
+        output_tokens = output_chars // 4
+        
+        return LLMResponse(
+            content=content,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            model=self.model,
+            provider="ollama",
+            cost_usd=0.0,  # Free!
+        )
+
+
+class GroqProvider(LLMProviderBase):
+    """Groq Cloud LLM provider - FREE tier available.
+    
+    Ultra-fast inference on Llama 3.1, Mixtral, and more.
+    Sign up at https://console.groq.com for free API key.
+    Free tier: ~30 requests/minute, no credit card needed.
+    """
+
+    # Pricing per 1K tokens (Groq free tier)
+    PRICING = {
+        "llama-3.1-70b-versatile": {"input": 0.0, "output": 0.0},  # Free tier
+        "llama-3.1-8b-instant": {"input": 0.0, "output": 0.0},  # Free tier
+        "mixtral-8x7b-32768": {"input": 0.0, "output": 0.0},  # Free tier
+    }
+
+    def __init__(self, api_key: Optional[str] = None, model: str = "llama-3.1-70b-versatile"):
+        from groq import Groq
+        self.client = Groq(api_key=api_key or os.environ.get("GROQ_API_KEY", ""))
+        self.model = model
+
+    def call(self, messages: List[Dict[str, str]], **kwargs) -> LLMResponse:
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=messages,
+            **kwargs
+        )
+        input_tokens = response.usage.prompt_tokens
+        output_tokens = response.usage.completion_tokens
+        
+        pricing = self.PRICING.get(self.model, self.PRICING["llama-3.1-70b-versatile"])
+        cost_usd = (
+            (input_tokens / 1000.0) * pricing["input"] +
+            (output_tokens / 1000.0) * pricing["output"]
+        )
+
+        return LLMResponse(
+            content=response.choices[0].message.content or "",
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            model=self.model,
+            provider="groq",
+            cost_usd=cost_usd,
+        )
 
 
 class OpenAIProvider(LLMProviderBase):
@@ -127,15 +218,27 @@ def get_llm_provider(provider: Optional[str] = None, model: Optional[str] = None
     Priority:
     1. Explicit provider/model arguments
     2. Environment variables (LLM_PROVIDER, LLM_MODEL)
-    3. Default: OpenAI with gpt-4o-mini
-    """
-    provider = provider or os.environ.get("LLM_PROVIDER", "openai")
+    3. Default: Ollama with llama3 (FREE, no API key)
     
-    if provider == "openai":
+    Supported providers:
+    - ollama: FREE, local, no API key (models: llama3, mistral, gemma)
+    - groq: FREE tier, fast, needs API key from groq.com (models: llama-3.1-70b, mixtral)
+    - openai: Paid, needs API key (models: gpt-4o-mini, gpt-4o)
+    - anthropic: Paid, needs API key (models: claude-3-haiku, claude-3-sonnet)
+    """
+    provider = provider or os.environ.get("LLM_PROVIDER", "ollama")
+    
+    if provider == "ollama":
+        model = model or os.environ.get("LLM_MODEL", "llama3")
+        return OllamaProvider(model=model)
+    elif provider == "groq":
+        model = model or os.environ.get("LLM_MODEL", "llama-3.1-70b-versatile")
+        return GroqProvider(model=model)
+    elif provider == "openai":
         model = model or os.environ.get("LLM_MODEL", "gpt-4o-mini")
         return OpenAIProvider(model=model)
     elif provider == "anthropic":
         model = model or os.environ.get("LLM_MODEL", "claude-3-haiku-20240307")
         return AnthropicProvider(model=model)
     else:
-        raise ValueError(f"Unknown provider: {provider}. Supported: openai, anthropic")
+        raise ValueError(f"Unknown provider: {provider}. Supported: ollama, groq, openai, anthropic")
