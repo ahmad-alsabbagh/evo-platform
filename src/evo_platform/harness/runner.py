@@ -1,6 +1,11 @@
 """Agent Runner - Ties together sandbox, credential proxy, circuit breakers,
-cost tracking, authorization enforcement, and the immutable audit trail into
-a single production execution path.
+cost tracking, authorization enforcement, and the audit trail into a single
+production execution path.
+
+Persistence: the audit log and approval queue are backed by PostgreSQL when
+DATABASE_URL is set in the environment, and fall back to in-memory
+implementations otherwise (local dev / tests). See
+`governance.persistence.get_governance_backend`.
 
 Execution flow for a single AgentRequest:
   1. Enforce guardrails (spending cap, tool allowlist) up front.
@@ -10,7 +15,8 @@ Execution flow for a single AgentRequest:
      - ALLOW -> continue execution.
   3. Execute agent logic (LLM call + tool calls) through circuit breakers.
   4. Meter cost per token/tool call against the session budget.
-  5. Record an immutable, hash-chained audit entry and return AgentResponse.
+  5. Record an audit entry (hash-chained, durable if Postgres-backed) and
+     return AgentResponse.
 """
 
 import time
@@ -27,9 +33,8 @@ from .contracts import (
 from .cost_tracker import CostEvent, CostTracker, BudgetExceededError, BudgetPolicy
 from .credential_proxy import CredentialProxy
 from .sandbox import SandboxLimits, SandboxProvider, get_default_sandbox
-from ..governance.audit import ImmutableAuditLog
 from ..governance.authorization import ActionRequest, AuthorizationDecision, AuthorizationEnforcer
-from ..governance.approval import ApprovalQueue
+from ..governance.persistence import get_governance_backend
 
 
 class GuardrailViolation(Exception):
@@ -52,6 +57,8 @@ class AgentRunner:
         llm_call: Optional[Callable[[AgentRequest], tuple[str, int, int]]] = None,
         sandbox: Optional[SandboxProvider] = None,
         config: Optional[AgentRunnerConfig] = None,
+        audit_log=None,
+        approval_queue=None,
     ):
         self.llm_call = llm_call or self._stub_llm_call
         self.sandbox = sandbox or get_default_sandbox()
@@ -59,9 +66,13 @@ class AgentRunner:
         self.circuit_breakers = CircuitBreakerRegistry()
         self.cost_tracker = CostTracker()
         self.credential_proxy = CredentialProxy()
-        self.audit_log = ImmutableAuditLog()
         self.authorization_enforcer = AuthorizationEnforcer()
-        self.approval_queue = ApprovalQueue()
+
+        if audit_log is not None and approval_queue is not None:
+            self.audit_log = audit_log
+            self.approval_queue = approval_queue
+        else:
+            self.audit_log, self.approval_queue = get_governance_backend()
 
     @staticmethod
     def _stub_llm_call(request: AgentRequest) -> tuple[str, int, int]:
@@ -123,14 +134,7 @@ class AgentRunner:
         )
 
     def execute(self, request: AgentRequest, action_type: Optional[str] = None) -> AgentResponse:
-        """Execute an AgentRequest through the full production harness.
-
-        Args:
-            request: the agent request to execute.
-            action_type: the governed action type this request represents
-                (e.g. "generate_response", "refund_payment"). Defaults to
-                a low-risk generic action if not specified.
-        """
+        """Execute an AgentRequest through the full production harness."""
         start = time.time()
         scope = f"session:{request.session_id}"
         action_type = action_type or self.config.default_action_type
