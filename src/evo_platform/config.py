@@ -1,23 +1,42 @@
-from functools import lru_cache
+"""Application configuration with pydantic settings.
 
-from pydantic import Field
-from pydantic_settings import BaseSettings, SettingsConfigDict
+All configuration is loaded from environment variables with sensible defaults.
+"""
+
+import os
+from pydantic_settings import BaseSettings
+from typing import Optional
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="EVO_", extra="ignore")
+    """Application settings loaded from environment variables."""
+    
+    # Database
+    database_url: Optional[str] = None
+    
+    # LLM Configuration
+    llm_provider: str = "openai"
+    llm_model: str = "gpt-4o-mini"
+    openai_api_key: Optional[str] = None
+    anthropic_api_key: Optional[str] = None
+    
+    # Server
+    host: str = "0.0.0.0"
+    port: int = 8000
+    
+    # Cost Tracking (default pricing for gpt-4o-mini)
+    cost_per_1k_input_tokens: float = 0.00015
+    cost_per_1k_output_tokens: float = 0.0006
+    
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
 
-    environment: str = "development"
-    service_name: str = "evo-platform"
-    database_url: str = Field(default="postgresql+asyncpg://evo:evo@localhost:5432/evo")
-    redis_url: str = "redis://localhost:6379/0"
-    redis_stream: str = "evo:evaluation"
-    redis_group: str = "evo-workers"
-    redis_visibility_timeout_ms: int = Field(default=60_000, ge=1_000)
-    otel_exporter_otlp_endpoint: str | None = None
-    otel_sample_ratio: float = Field(default=1.0, ge=0.0, le=1.0)
+
+# Global settings instance
+settings = Settings()
 
 
-@lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    """Get application settings."""
+    return settings

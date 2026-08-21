@@ -35,6 +35,7 @@ from .credential_proxy import CredentialProxy
 from .sandbox import SandboxLimits, SandboxProvider, get_default_sandbox
 from ..governance.authorization import ActionRequest, AuthorizationDecision, AuthorizationEnforcer
 from ..governance.persistence import get_governance_backend
+from ..llm.providers import get_llm_provider, LLMProviderBase
 
 
 class GuardrailViolation(Exception):
@@ -54,13 +55,13 @@ class AgentRunner:
 
     def __init__(
         self,
-        llm_call: Optional[Callable[[AgentRequest], tuple[str, int, int]]] = None,
+        llm_provider: Optional[LLMProviderBase] = None,
         sandbox: Optional[SandboxProvider] = None,
         config: Optional[AgentRunnerConfig] = None,
         audit_log=None,
         approval_queue=None,
     ):
-        self.llm_call = llm_call or self._stub_llm_call
+        self.llm_provider = llm_provider or get_llm_provider()
         self.sandbox = sandbox or get_default_sandbox()
         self.config = config or AgentRunnerConfig()
         self.circuit_breakers = CircuitBreakerRegistry()
@@ -74,12 +75,19 @@ class AgentRunner:
         else:
             self.audit_log, self.approval_queue = get_governance_backend()
 
-    @staticmethod
-    def _stub_llm_call(request: AgentRequest) -> tuple[str, int, int]:
-        output = f"[stub-response] Acknowledged: {request.input[:120]}"
-        input_tokens = max(1, len(request.input.split()))
-        output_tokens = max(1, len(output.split()))
-        return output, input_tokens, output_tokens
+    def _llm_call(self, request: AgentRequest) -> tuple[str, int, int, float]:
+        """Call LLM provider and return (output, input_tokens, output_tokens, cost_usd)."""
+        messages = [
+            {"role": "system", "content": "You are a helpful customer support assistant."},
+            {"role": "user", "content": request.input},
+        ]
+        response = self.llm_provider.call(messages, max_tokens=1000)
+        return (
+            response.content,
+            response.input_tokens,
+            response.output_tokens,
+            response.cost_usd,
+        )
 
     def _enforce_guardrails(self, request: AgentRequest) -> None:
         guardrails = request.context.guardrails
@@ -201,12 +209,8 @@ class AgentRunner:
                 guardrails_triggered=[f"pending_approval:{approval.approval_id}"],
             )
 
-        output, input_tokens, output_tokens = self.llm_call(request)
-
-        cost_usd = (
-            (input_tokens / 1000.0) * self.config.cost_per_1k_input_tokens
-            + (output_tokens / 1000.0) * self.config.cost_per_1k_output_tokens
-        )
+        # Call LLM with real provider
+        output, input_tokens, output_tokens, cost_usd = self._llm_call(request)
 
         try:
             self.cost_tracker.record(
@@ -215,14 +219,14 @@ class AgentRunner:
                     agent_id=request.agent_id,
                     amount_usd=cost_usd,
                     category="llm_tokens",
-                    metadata={"model": self.config.default_model},
+                    metadata={"model": self.llm_provider.model, "provider": self.llm_provider.__class__.__name__},
                 )
             )
         except BudgetExceededError as e:
             self._audit(request, action_type, "denied", {"reason": str(e)})
             return AgentResponse(
                 request_id=request.request_id,
-                output="",
+                output=output,
                 tokens_used=TokenUsage(input_tokens, output_tokens, input_tokens + output_tokens, cost_usd, self.config.default_model),
                 latency_ms=(time.time() - start) * 1000,
                 cost_usd=cost_usd,
@@ -248,7 +252,7 @@ class AgentRunner:
                 output_tokens=output_tokens,
                 total_tokens=input_tokens + output_tokens,
                 cost_usd=cost_usd,
-                model=self.config.default_model,
+                model=self.llm_provider.model,
             ),
             latency_ms=latency_ms,
             cost_usd=cost_usd,
