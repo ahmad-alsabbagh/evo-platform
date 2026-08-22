@@ -1,63 +1,51 @@
-import os
 from logging.config import fileConfig
-
+from sqlalchemy import engine_from_config, pool
 from alembic import context
-from sqlalchemy import pool
-from sqlalchemy.engine import Connection
-from sqlalchemy.ext.asyncio import async_engine_from_config
-
-from evo_platform.storage.models import Base
+import os
 
 config = context.config
+
 if config.config_file_name is not None:
-    try:
-        fileConfig(config.config_file_name)
-    except KeyError:
-        pass
+    fileConfig(config.config_file_name)
 
+from evo_platform.governance.models import Base
 
-def configured_database_url() -> str:
-    database_url = os.getenv("EVO_DATABASE_URL") or config.get_main_option("sqlalchemy.url")
-    if not database_url or database_url.startswith("driver://"):
-        raise RuntimeError("EVO_DATABASE_URL must be configured for migrations")
-    return database_url
-
-
-config.set_main_option("sqlalchemy.url", configured_database_url())
 target_metadata = Base.metadata
 
 
-def run_migrations_offline() -> None:
-    context.configure(
-        url=config.get_main_option("sqlalchemy.url"),
-        target_metadata=target_metadata,
-        literal_binds=True,
-    )
-    with context.begin_transaction():
-        context.run_migrations()
+def configured_database_url():
+    """Get database URL from environment."""
+    url = os.environ.get("DATABASE_URL")
+    if not url:
+        raise RuntimeError("DATABASE_URL must be configured for migrations")
+    return url
 
 
-async def run_async_migrations() -> None:
-    connectable = async_engine_from_config(
-        config.get_section(config.config_ini_section, {}),
+def run_migrations_online():
+    connectable = engine_from_config(
+        config.get_section(config.config_ini_section),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
-    async with connectable.connect() as connection:
-        await connection.run_sync(do_run_migrations)
-    await connectable.dispose()
+    with connectable.connect() as connection:
+        context.configure(
+            connection=connection,
+            target_metadata=target_metadata,
+        )
+        with context.begin_transaction():
+            context.run_migrations()
 
 
-def do_run_migrations(connection: Connection) -> None:
-    context.configure(connection=connection, target_metadata=target_metadata)
+def run_migrations_offline():
+    url = configured_database_url()
+    context.configure(
+        url=url,
+        target_metadata=target_metadata,
+        literal_binds=True,
+        compare_type=True,
+    )
     with context.begin_transaction():
         context.run_migrations()
-
-
-def run_migrations_online() -> None:
-    import asyncio
-
-    asyncio.run(run_async_migrations())
 
 
 if context.is_offline_mode():
