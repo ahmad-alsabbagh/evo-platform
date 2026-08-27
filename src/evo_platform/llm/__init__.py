@@ -1,5 +1,5 @@
 """LLM providers with unified interface and cost tracking."""
 
-from .providers import LLMProvider, get_llm_provider
+from .providers import LLMProviderBase, get_llm_provider
 
-__all__ = ["LLMProvider", "get_llm_provider"]
+__all__ = ["LLMProviderBase", "get_llm_provider"]
