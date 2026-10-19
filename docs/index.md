@@ -18,9 +18,10 @@ local language models.
 - [Evaluation](operations/evaluation.md)
 - [Roadmap](operations/roadmap.md)
 
-## Other documentation
+## Explanation
 
-- [Capability model](capability-model.md)
+- [Capability model](explanation/capability-model.md)
+- [Interoperability](explanation/interoperability.md)
 
 ## Conventions
 
