@@ -9,8 +9,8 @@ local language models.
 - [Homelab integration](how-to/integrations/homelab.md) explains how to connect
   agents to Kubernetes, Proxmox, monitoring, Home Assistant, MCP services, or
   cloud providers.
-- [Agent Skills](agent-skills.md) covers skill packages and validation.
-- [Skill Runner](skill-runner.md) covers skill-aware agent execution.
+- [Agent Skills](skills/agent-skills.md) covers skill packages and validation.
+- [Skill Runner](skills/skill-runner.md) covers skill-aware agent execution.
 
 ## Other documentation
 
