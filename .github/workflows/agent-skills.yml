@@ -6,8 +6,8 @@ on:
       - 'capabilities/skills/**'
       - 'tools/validate_skills.py'
       - 'tools/requirements-skills.txt'
-      - 'tests/test_agent_skills_format.py'
-      - 'tests/test_anthropic_system_messages.py'
+      - 'tests/unit/test_agent_skills_format.py'
+      - 'tests/unit/test_anthropic_system_messages.py'
       - 'src/evo_platform/llm/providers.py'
       - '.github/workflows/agent-skills.yml'
   push:
@@ -16,8 +16,8 @@ on:
       - 'capabilities/skills/**'
       - 'tools/validate_skills.py'
       - 'tools/requirements-skills.txt'
-      - 'tests/test_agent_skills_format.py'
-      - 'tests/test_anthropic_system_messages.py'
+      - 'tests/unit/test_agent_skills_format.py'
+      - 'tests/unit/test_anthropic_system_messages.py'
       - 'src/evo_platform/llm/providers.py'
       - '.github/workflows/agent-skills.yml'
   workflow_dispatch:
@@ -46,6 +46,6 @@ jobs:
       - name: Validate skill packages
         run: python tools/validate_skills.py capabilities/skills
       - name: Test skill format rules
-        run: python -m unittest discover -s tests -p test_agent_skills_format.py -v
+        run: python -m unittest discover -s tests/unit -p test_agent_skills_format.py -v
       - name: Test Anthropic system-message merging with offline client
-        run: python -m unittest discover -s tests -p test_anthropic_system_messages.py -v
+        run: python -m unittest discover -s tests/unit -p test_anthropic_system_messages.py -v
