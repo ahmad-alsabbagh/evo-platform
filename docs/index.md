@@ -25,6 +25,7 @@ local language models.
 - [Artifact lineage](explanation/lineage.md)
 - [Experimentation and rollouts](explanation/experimentation.md)
 - [Vision](explanation/vision.md)
+- [Production engineering baseline](explanation/production-baseline.md)
 
 ## Conventions
 
