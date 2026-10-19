@@ -1,0 +1,135 @@
+{
+  "capability_id": "customer-support-agent",
+  "capability_version": "1.0.0",
+  "examples": [
+    {
+      "id": "cs-001",
+      "input": "How do I reset my password?",
+      "expected_output": "To reset your password, please follow these steps:\n1. Go to the login page\n2. Click 'Forgot Password'\n3. Enter your email address\n4. Check your email for a reset link\n5. Click the link and create a new password\n\nIf you don't receive the email within 5 minutes, please check your spam folder or contact support.",
+      "metadata": {
+        "difficulty": "easy",
+        "category": "account-management",
+        "tags": ["password", "login", "self-service"]
+      },
+      "scorers": {
+        "semantic_similarity": 0.95,
+        "exact_match": false,
+        "llm_judge_score": 4.8,
+        "custom_scorers": {
+          "response_time": 0.9,
+          "helpfulness": 0.95,
+          "accuracy": 1.0
+        }
+      }
+    },
+    {
+      "id": "cs-002",
+      "input": "I was charged twice for my subscription. Can you help?",
+      "expected_output": "I understand your concern about the duplicate charge. Let me help you with that.\n\nFirst, I'll need to verify your account. Can you please provide:\n1. Your account email address\n2. The date of the charge(s)\n3. The amount charged\n\nOnce I have this information, I can investigate the duplicate charge and process a refund if confirmed. Refunds typically take 3-5 business days to appear in your account.",
+      "metadata": {
+        "difficulty": "medium",
+        "category": "billing",
+        "tags": ["refund", "duplicate-charge", "urgent"]
+      },
+      "scorers": {
+        "semantic_similarity": 0.92,
+        "exact_match": false,
+        "llm_judge_score": 4.6,
+        "custom_scorers": {
+          "response_time": 0.85,
+          "helpfulness": 0.9,
+          "accuracy": 0.95,
+          "empathy": 0.9
+        }
+      }
+    },
+    {
+      "id": "cs-003",
+      "input": "Your product is terrible! I want to cancel immediately!",
+      "expected_output": "I'm really sorry to hear that you're not satisfied with our product. I completely understand your frustration, and I want to help make this right.\n\nBefore we proceed with cancellation, I'd love to understand what specific issues you've experienced. This feedback helps us improve, and I may be able to offer solutions that address your concerns.\n\nHowever, if you'd still like to cancel, I can help you with that. Can you please confirm:\n1. Your account email\n2. Whether you'd like a refund for the current billing period\n\nYour feedback is valuable to us, and I'm here to help in any way I can.",
+      "metadata": {
+        "difficulty": "hard",
+        "category": "retention",
+        "tags": ["cancellation", "churn-risk", "escalation"]
+      },
+      "scorers": {
+        "semantic_similarity": 0.90,
+        "exact_match": false,
+        "llm_judge_score": 4.5,
+        "custom_scorers": {
+          "response_time": 0.8,
+          "helpfulness": 0.85,
+          "accuracy": 0.9,
+          "empathy": 0.95,
+          "de-escalation": 0.9
+        }
+      }
+    },
+    {
+      "id": "cs-004",
+      "input": "What are your business hours?",
+      "expected_output": "Our customer support team is available:\n\n**Chat & Email Support:**\n- Monday to Friday: 9 AM - 9 PM EST\n- Saturday & Sunday: 10 AM - 6 PM EST\n\n**Phone Support:**\n- Monday to Friday: 9 AM - 6 PM EST\n- Closed on weekends\n\nFor urgent issues outside business hours, you can submit a ticket through our help center, and we'll respond as soon as possible.",
+      "metadata": {
+        "difficulty": "easy",
+        "category": "general-info",
+        "tags": ["hours", "contact", "self-service"]
+      },
+      "scorers": {
+        "semantic_similarity": 0.96,
+        "exact_match": false,
+        "llm_judge_score": 4.9,
+        "custom_scorers": {
+          "response_time": 0.95,
+          "helpfulness": 0.9,
+          "accuracy": 1.0
+        }
+      }
+    },
+    {
+      "id": "cs-005",
+      "input": "I need to export all my data for compliance reasons. How can I do this?",
+      "expected_output": "I can help you export your data for compliance purposes. Here's how to do it:\n\n**Self-Service Export:**\n1. Go to Settings > Data & Privacy\n2. Click 'Export My Data'\n3. Select the data types you need (all selected by default)\n4. Choose your preferred format (CSV or JSON)\n5. Click 'Request Export'\n\nYour data will be prepared within 24-48 hours, and you'll receive a download link via email. The link will be valid for 7 days.\n\n**For Enterprise Customers:**\nIf you need regular automated exports or have specific compliance requirements, please contact your account manager. We can set up:\n- Scheduled exports (daily/weekly/monthly)\n- Direct SFTP delivery\n- Custom data formats\n- Compliance documentation\n\nIs there specific compliance standard you need to meet (GDPR, SOC 2, HIPAA, etc.)? I can provide additional documentation if needed.",
+      "metadata": {
+        "difficulty": "medium",
+        "category": "data-privacy",
+        "tags": ["export", "compliance", "enterprise"]
+      },
+      "scorers": {
+        "semantic_similarity": 0.93,
+        "exact_match": false,
+        "llm_judge_score": 4.7,
+        "custom_scorers": {
+          "response_time": 0.85,
+          "helpfulness": 0.95,
+          "accuracy": 0.95,
+          "completeness": 0.9
+        }
+      }
+    }
+  ],
+  "created_at": "2026-08-21T00:00:00Z",
+  "updated_at": "2026-08-21T00:00:00Z",
+  "owner": "ahmad-alsabbagh",
+  "metadata": {
+    "total_examples": 5,
+    "target_examples": 300,
+    "difficulty_distribution": {
+      "easy": 2,
+      "medium": 2,
+      "hard": 1
+    },
+    "category_coverage": [
+      "account-management",
+      "billing",
+      "retention",
+      "general-info",
+      "data-privacy"
+    ],
+    "next_steps": [
+      "Add 295 more examples to reach 300 target",
+      "Ensure 40% easy, 40% medium, 20% hard distribution",
+      "Add more edge cases and failure scenarios",
+      "Include examples from production failures"
+    ]
+  }
+}
