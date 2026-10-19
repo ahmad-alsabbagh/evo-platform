@@ -1,4 +1,4 @@
-name: Agent Skills format
+name: Agent Skills and provider contracts
 
 on:
   pull_request:
@@ -7,6 +7,8 @@ on:
       - 'tools/validate_skills.py'
       - 'tools/requirements-skills.txt'
       - 'tests/test_agent_skills_format.py'
+      - 'tests/test_anthropic_system_messages.py'
+      - 'src/evo_platform/llm/providers.py'
       - '.github/workflows/agent-skills.yml'
   push:
     branches: [main, feat/foundation]
@@ -15,6 +17,8 @@ on:
       - 'tools/validate_skills.py'
       - 'tools/requirements-skills.txt'
       - 'tests/test_agent_skills_format.py'
+      - 'tests/test_anthropic_system_messages.py'
+      - 'src/evo_platform/llm/providers.py'
       - '.github/workflows/agent-skills.yml'
   workflow_dispatch:
 
@@ -23,15 +27,25 @@ permissions:
 
 jobs:
   validate:
+    name: Offline contracts (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.12', '3.14']
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
       - uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d
         with:
-          python-version: '3.12'
-      - run: python -m pip install -r tools/requirements-skills.txt
-      - run: python tools/validate_skills.py capabilities/skills
-      - run: python -m unittest discover -s tests -p test_agent_skills_format.py -v
+          python-version: ${{ matrix.python-version }}
+      - name: Install format-validation dependency
+        run: python -m pip install -r tools/requirements-skills.txt
+      - name: Validate skill packages
+        run: python tools/validate_skills.py capabilities/skills
+      - name: Test skill format rules
+        run: python -m unittest discover -s tests -p test_agent_skills_format.py -v
+      - name: Test Anthropic system-message merging with offline client
+        run: python -m unittest discover -s tests -p test_anthropic_system_messages.py -v
