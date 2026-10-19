@@ -22,6 +22,9 @@ local language models.
 
 - [Capability model](explanation/capability-model.md)
 - [Interoperability](explanation/interoperability.md)
+- [Artifact lineage](explanation/lineage.md)
+- [Experimentation and rollouts](explanation/experimentation.md)
+- [Vision](explanation/vision.md)
 
 ## Conventions
 
