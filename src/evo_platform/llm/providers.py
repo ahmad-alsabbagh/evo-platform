@@ -178,18 +178,18 @@ class AnthropicProvider(LLMProviderBase):
 
     def call(self, messages: List[Dict[str, str]], **kwargs) -> LLMResponse:
         # Convert OpenAI format to Anthropic format
-        system_msg = ""
+        system_parts: List[str] = []
         chat_messages = []
         for msg in messages:
             if msg["role"] == "system":
-                system_msg = msg["content"]
+                system_parts.append(msg["content"])
             else:
                 chat_messages.append(msg)
 
         response = self.client.messages.create(
             model=self.model,
             max_tokens=kwargs.get("max_tokens", 1000),
-            system=system_msg,
+            system="\n\n".join(system_parts),
             messages=chat_messages,
         )
 
