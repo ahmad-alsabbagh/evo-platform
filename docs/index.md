@@ -12,12 +12,15 @@ local language models.
 - [Agent Skills](skills/agent-skills.md) covers skill packages and validation.
 - [Skill Runner](skills/skill-runner.md) covers skill-aware agent execution.
 
+## Operations
+
+- [Security](operations/security.md)
+- [Evaluation](operations/evaluation.md)
+- [Roadmap](operations/roadmap.md)
+
 ## Other documentation
 
 - [Capability model](capability-model.md)
-- [Evaluation](evaluation.md)
-- [Security](security.md)
-- [Roadmap](roadmap.md)
 
 ## Conventions
 
