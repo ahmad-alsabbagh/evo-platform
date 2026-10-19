@@ -27,6 +27,10 @@ local language models.
 - [Vision](explanation/vision.md)
 - [Production engineering baseline](explanation/production-baseline.md)
 
+## References
+
+- [Snack prompt](references/snack-prompt.md)
+
 ## Conventions
 
 Documentation is kept beside the code and reviewed in pull requests. Each page
