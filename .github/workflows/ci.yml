@@ -124,4 +124,4 @@ jobs:
       - name: PostgreSQL and Redis integration tests
         run: uv run pytest -m integration
       - name: Validate JSON schemas
-        run: uv run pytest -q tests/test_schemas.py tests/test_catalog_schemas.py tests/test_evaluation_run_schema.py
+        run: uv run pytest -q tests/unit/test_schemas.py tests/unit/test_catalog_schemas.py tests/unit/test_evaluation_run_schema.py
